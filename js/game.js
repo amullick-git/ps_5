@@ -29,6 +29,8 @@ export function createGame(canvas, player, obstacleSpawner, onGameOver, onScoreU
   let particles = [];
   let shakeX = 0, shakeY = 0;
   let nearMissGlow = 0;
+  let wasNearMiss = false;
+  let nearMissCooldown = 0;
 
   const onObstacleRemoved = (o) => renderer3d.onObstacleRemoved(o);
 
@@ -72,11 +74,19 @@ export function createGame(canvas, player, obstacleSpawner, onGameOver, onScoreU
     }
 
     const closest = closestObstacleDistance(player, obstacleSpawner.obstacles);
-    if (closest < NEAR_MISS_DIST && closest > player.radius) {
+    const isNearMiss = closest < NEAR_MISS_DIST && closest > player.radius;
+    if (isNearMiss) {
       nearMissGlow = Math.min(1, nearMissGlow + dt * 4);
+      if (!wasNearMiss && nearMissCooldown <= 0) {
+        audio.playNearMiss();
+        nearMissCooldown = 0.4;
+      }
+      wasNearMiss = true;
     } else {
       nearMissGlow = Math.max(0, nearMissGlow - dt * 3);
+      wasNearMiss = false;
     }
+    if (nearMissCooldown > 0) nearMissCooldown -= dt;
 
     survivalAccum += dt;
     if (survivalAccum >= 1) {

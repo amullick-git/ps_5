@@ -43,6 +43,21 @@ export function playPass() {
   playTone(554, 0.08, 'sine', 0.1);
 }
 
+export function playNearMiss() {
+  if (!ctx) return;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(660, ctx.currentTime);
+  osc.frequency.linearRampToValueAtTime(440, ctx.currentTime + 0.22);
+  gain.gain.setValueAtTime(0.15, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22);
+  osc.start(ctx.currentTime);
+  osc.stop(ctx.currentTime + 0.22);
+}
+
 export function playMenuSelect() {
   if (!ctx) return;
   playTone(330, 0.05, 'sine', 0.2);

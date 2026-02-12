@@ -64,7 +64,7 @@ export function render(player, obstacles, particles, shakeX, shakeY, nearMissGlo
   const [px, pz] = to3D(player.x, player.y);
   playerMesh.position.set(px, 0.2, pz);
   playerMesh.visible = true;
-  playerMesh.material.emissive = new THREE.Color(0x00D9FF).multiplyScalar(nearMissGlow * 0.5);
+  playerMesh.material.emissive = new THREE.Color(0xFFEB3B).multiplyScalar(nearMissGlow * 0.5);
 
   for (const o of obstacles) {
     if (!o.mesh) {
