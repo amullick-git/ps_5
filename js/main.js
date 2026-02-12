@@ -38,7 +38,7 @@ function startPlaying() {
   resetPlayer(player, WIDTH, HEIGHT);
   highScore = ui.getHighScore();
   ui.showPlaying(score, highScore);
-  gameInstance = createGame(canvas, player, obstacleSpawner, onGameOver, addScore);
+  gameInstance = createGame(canvas, WIDTH, HEIGHT, player, obstacleSpawner, onGameOver, addScore);
   // BGM starts after countdown (handled in game loop)
 }
 

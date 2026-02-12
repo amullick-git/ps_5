@@ -9,6 +9,8 @@ const MIN_LIFETIME = 6;
 const MAX_LIFETIME = 12;
 const MAX_ON_SCREEN = 6;
 const POINTS = [50, 75, 100];
+// Color by points: 50=gold, 75=cyan, 100=magenta
+const COLOR_BY_POINTS = { 50: 0xFFD700, 75: 0x00BCD4, 100: 0xE91E63 };
 
 const FLOAT_SPEED = 40;
 const FLOAT_RADIUS = 25;
@@ -19,9 +21,11 @@ export function createCollectibleSpawner(width, height) {
 
   function randomSafePosition() {
     const pad = 60;
+    const w = Math.max(width - pad * 2, 100);
+    const h = Math.max(height - pad * 2, 100);
     return {
-      x: pad + Math.random() * (width - pad * 2),
-      y: pad + Math.random() * (height - pad * 2),
+      x: pad + Math.random() * w,
+      y: pad + Math.random() * h,
     };
   }
 
@@ -34,11 +38,13 @@ export function createCollectibleSpawner(width, height) {
     const floats = Math.random() > 0.4;
     const angle = Math.random() * Math.PI * 2;
 
+    const color = COLOR_BY_POINTS[points] ?? 0xFFD700;
     collectibles.push({
       x: pos.x,
       y: pos.y,
       radius: RADIUS,
       points,
+      color,
       life: lifetime,
       maxLife: lifetime,
       floats,
@@ -52,6 +58,7 @@ export function createCollectibleSpawner(width, height) {
     collectibles,
     primeFirstSpawn() {
       spawnTimer = SPAWN_INTERVAL;
+      spawn(); // Spawn immediately on "Go!"
     },
     update(dt, onExpire) {
       spawnTimer += dt;

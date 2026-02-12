@@ -15,9 +15,9 @@ const OBSTACLE_CLEARED_POINTS = 25;
 const NEAR_MISS_DIST = 55;
 const SHAKE_DECAY = 8;
 
-export function createGame(canvas, player, obstacleSpawner, onGameOver, onScoreUpdate) {
-  const width = canvas.width;
-  const height = canvas.height;
+export function createGame(canvas, width, height, player, obstacleSpawner, onGameOver, onScoreUpdate) {
+  width = width ?? canvas?.width ?? 800;
+  height = height ?? canvas?.height ?? 600;
 
   renderer3d.init(canvas, width, height);
   renderer3d.reset();

@@ -8,7 +8,10 @@ const SIZES = [
   { w: 50, h: 50 },
   { w: 70, h: 70 },
 ];
-const COLOR = '#E53935';
+const COLORS = [
+  0xE53935, 0xFF5722, 0xE91E63, 0x9C27B0, 0x00BCD4, 0xFF9800,
+  0x7C4DFF, 0xFF4081, 0x00E676, 0xFFAB00, 0x5E35B1, 0x18FFFF,
+];
 const BASE_SPEED = 150;
 const MAX_SPEED = 400;
 const SPAWN_INTERVAL_START = 0.9;
@@ -82,7 +85,8 @@ export function createObstacleSpawner(width, height) {
       vy = (dy / mag) * speed;
     }
 
-    obstacles.push({ x, y, w: size.w, h: size.h, vx, vy });
+    const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+    obstacles.push({ x, y, w: size.w, h: size.h, vx, vy, color });
   }
 
   return {
@@ -127,8 +131,8 @@ export function createObstacleSpawner(width, height) {
       gameTime = 0;
     },
     render(ctx) {
-      ctx.fillStyle = COLOR;
       for (const o of obstacles) {
+        ctx.fillStyle = o.color ? '#' + o.color.toString(16).padStart(6, '0') : '#E53935';
         ctx.fillRect(o.x, o.y, o.w, o.h);
       }
     },

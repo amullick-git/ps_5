@@ -8,10 +8,11 @@
 ### 1.2 Core Loop
 1. Player moves using the left analog stick.
 2. Obstacles spawn from screen edges and move toward the center/player area.
-3. Player avoids contact with obstacles.
-4. Score increases over time and for each obstacle cleared.
-5. Collision with an obstacle = game over.
-6. Player can restart and try to beat their high score.
+3. Collectibles spawn in the play area; player can collect them for extra points.
+4. Player avoids contact with obstacles.
+5. Score increases over time, for each obstacle cleared, and for collectibles collected.
+6. Collision with an obstacle = game over.
+7. Player can restart and try to beat their high score.
 
 ### 1.3 Design Pillars
 - **Simple controls** — One stick to move, no additional actions required.
@@ -50,7 +51,8 @@ ps_5/
 │   ├── controller.js       # Gamepad polling, input normalization
 │   ├── player.js           # Player entity, movement, bounds
 │   ├── obstacle.js         # Obstacle spawner, types, movement
-│   ├── collision.js        # Collision detection (AABB)
+│   ├── collectible.js      # Collectible spawner, points, lifetime
+│   ├── collision.js        # Collision detection (AABB, circle-circle)
 │   ├── particles.js        # Particle burst on game over
 │   ├── renderer3d.js       # Three.js 3D renderer
 │   ├── audio.js            # Web Audio: hit, pass, menu, BGM, near-miss
@@ -163,7 +165,7 @@ ps_5/
 | Spawn | Random edge (top/right/bottom/left) | Outside visible area |
 | Direction | Toward center or slight random offset | Create variety |
 | Speed | Base + scaling with game time | Difficulty ramp |
-| Color | e.g. `#E53935` | Contrast with player |
+| Colors | Multiple danger hues | Red, orange, pink, purple; random per obstacle |
 
 **Spawn Logic**:
 - Spawn point: Random edge (top/right/bottom/left), offset 1–2 obstacle widths outside visible play area.
@@ -175,6 +177,24 @@ ps_5/
 - **Time-based**: Every 30s, increase spawn rate and obstacle speed.
 - **Caps**: Spawn interval ≥ 0.5s; speed ≤ 400 px/s (adjustable).
 
+### 5.6 Collectibles
+
+| Property | Value | Notes |
+|----------|-------|-------|
+| Shape | Octahedron (diamond) | Distinct from player sphere and obstacle boxes |
+| Radius | 18 px | For collision (circle approximation) |
+| Spawn | Random position in play area | Padding 60 px from edges |
+| Behavior | Static or floating | ~60% float in a small circle (radius 25 px) |
+| Lifetime | 6–12 s | Disappear if not collected |
+| Max on screen | 6 | Spawn interval ~1.2 s; first spawn at "Go!" |
+| Points | 50, 75, or 100 | Random per spawn |
+| Color by points | 50=gold, 75=cyan, 100=magenta | Visual cue for value |
+
+**Spawn Logic**:
+- First collectible spawns when countdown reaches "Go!".
+- Subsequent spawns every ~1.2 s until max on screen (6).
+- On expiry, mesh is removed from scene; on collection, play chime and add points.
+
 ---
 
 ## 6. Collision System
@@ -182,15 +202,21 @@ ps_5/
 ### 6.1 Detection Method
 - **Player**: Circle, center `(px, py)`, radius `r`.
 - **Obstacle**: Axis-Aligned Bounding Box (AABB) only in v1.
-- **Algorithm**: Circle–AABB distance check (circle obstacles deferred).
+- **Collectible**: Circle approximation; radius 18 px.
+- **Algorithms**: Circle–AABB (player vs obstacle); Circle–Circle (player vs collectible).
 
 ### 6.2 Circle–AABB (Player vs Rect Obstacle)
 1. Find closest point on rectangle to circle center.
 2. Distance from circle center to that point.
 3. If distance ≤ player radius → collision.
 
-### 6.3 Response
-- On collision: set state to `GAME_OVER`, stop spawning, show final score.
+### 6.3 Circle–Circle (Player vs Collectible)
+1. Distance between circle centers.
+2. If distance ≤ player radius + collectible radius → collected.
+3. On collection: add points, remove collectible, play chime.
+
+### 6.4 Response
+- On obstacle collision: set state to `GAME_OVER`, stop spawning, show final score.
 
 ---
 
@@ -200,6 +226,7 @@ ps_5/
 |-------|--------|
 | Survival (per second) | 10 |
 | Obstacle cleared (exited play area without hitting player) | 25 |
+| Collectible (50 / 75 / 100) | 50, 75, or 100 |
 | (Optional) Near-miss bonus | 0 (v1) |
 
 **Obstacle cleared rule**: Awarded when an obstacle’s bounding box is fully outside the play area (any edge) without having collided with the player. Implement by checking obstacle bounds against canvas edges; when fully past, remove from active list and add +25 points.
@@ -213,7 +240,8 @@ ps_5/
 ### 8.1 Color Palette (Example)
 - Background: Dark `#1a1a2e`
 - Player: `#4CAF50`
-- Obstacles: `#E53935`
+- Obstacles: Multiple danger hues (red `#E53935`, orange `#FF5722`, pink `#E91E63`, purple `#9C27B0`, etc.); random per obstacle
+- Collectibles: Color by points — 50 pts = gold `#FFD700`, 75 pts = cyan `#00BCD4`, 100 pts = magenta `#E91E63`
 - UI text: `#EEEEEE`
 - Accent: `#00D9FF`
 
@@ -232,7 +260,7 @@ ps_5/
 ## 9. Audio
 
 - **BGM**: Low-key sine loop (110 Hz) during gameplay; starts after countdown.
-- **SFX**: Hit (thud on collision), pass (tone on obstacle cleared), menu select (click on start/restart), near-miss (descending pitch 660→440 Hz, ~0.22 s) when obstacle within ~55 px; 0.4 s cooldown.
+- **SFX**: Hit (thud on collision), pass (tone on obstacle cleared), menu select (click on start/restart), near-miss (descending pitch 660→440 Hz, ~0.22 s) when obstacle within ~55 px; 0.4 s cooldown; collect (two-tone chime) on collectible pickup.
 - **Implementation**: Web Audio API; procedural generation, no external files; init on first user interaction.
 
 ---
@@ -300,7 +328,13 @@ ps_5/
 - [x] **Collision behavior** — Player freezes at collision point; no movement during game-over animation.
 - [x] **Retina / HiDPI** — `setPixelRatio` up to 3×; `getBoundingClientRect()` for display size; higher geometry detail (player 32×32, particles 12×12); `powerPreference: 'high-performance'`.
 
-### Phase 7: Optional
+### Phase 7: Collectibles & Color Variety
+- [x] **Collectibles** — Diamond-shaped (octahedron) objects; 50/75/100 pts; static or floating; 6–12 s lifetime; max 6 on screen; spawn ~1.2 s; first spawn at "Go!"; collect chime.
+- [x] **Collectible collision** — Circle–circle detection; removal and scoring on collection.
+- [x] **Multiple obstacle colors** — Red, orange, pink, purple palette; random per obstacle.
+- [x] **Collectible colors by points** — Gold (50), cyan (75), magenta (100).
+
+### Phase 8: Optional
 - [ ] Multiple obstacle shapes (circles)
 
 ---
@@ -344,5 +378,5 @@ ps_5/
 
 ---
 
-*Document Version: 1.3*  
+*Document Version: 1.4*  
 *Last Updated: 2026-02-12*

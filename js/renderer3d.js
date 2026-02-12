@@ -18,12 +18,10 @@ let playerMesh, particleMeshes = [];
 let obstacleMeshes = new Set();
 const playerGeometry = new THREE.SphereGeometry(0.2, 32, 32);
 const playerMaterial = new THREE.MeshStandardMaterial({ color: 0x4CAF50 });
-const obstacleMaterial = new THREE.MeshStandardMaterial({ color: 0xE53935 });
 const particleGeometry = new THREE.SphereGeometry(0.05, 12, 12);
 const particleMaterial = new THREE.MeshBasicMaterial({ color: 0xE53935, transparent: true });
 // Octahedron (diamond) — distinct from player sphere and obstacle boxes
 const collectibleGeometry = new THREE.OctahedronGeometry(0.22, 0);
-const collectibleMaterial = new THREE.MeshStandardMaterial({ color: 0xFFD700, emissive: 0x886600 });
 
 export function init(canvas, width, height) {
   if (scene) return;
@@ -78,7 +76,10 @@ export function render(player, obstacles, collectibles, particles, shakeX, shake
   const t = Date.now() * 0.002;
   for (const c of collectibles || []) {
     if (!c.mesh) {
-      c.mesh = new THREE.Mesh(collectibleGeometry.clone(), collectibleMaterial.clone());
+      const color = c.color ?? 0xFFD700;
+      const emissive = new THREE.Color(color).multiplyScalar(0.5);
+      const mat = new THREE.MeshStandardMaterial({ color, emissive });
+      c.mesh = new THREE.Mesh(collectibleGeometry.clone(), mat);
       scene.add(c.mesh);
     }
     const [cx, cz] = to3D(c.x, c.y);
@@ -90,9 +91,12 @@ export function render(player, obstacles, collectibles, particles, shakeX, shake
 
   for (const o of obstacles) {
     if (!o.mesh) {
+      const color = o.color ?? 0xE53935;
+      const emissive = new THREE.Color(color).multiplyScalar(0.3);
+      const mat = new THREE.MeshStandardMaterial({ color, emissive });
       o.mesh = new THREE.Mesh(
         new THREE.BoxGeometry(o.w / SCALE, 0.3, o.h / SCALE, 2, 2, 2),
-        obstacleMaterial.clone()
+        mat
       );
       scene.add(o.mesh);
       obstacleMeshes.add(o.mesh);
