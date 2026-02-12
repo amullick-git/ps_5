@@ -91,3 +91,13 @@ export function updateHighScore(highScore) {
   const el = document.getElementById('high-score-display');
   if (el) el.textContent = `Best: ${highScore}`;
 }
+
+export function showSoundHint() {
+  const el = document.getElementById('sound-hint');
+  if (el) el.classList.remove('hidden');
+}
+
+export function hideSoundHint() {
+  const el = document.getElementById('sound-hint');
+  if (el) el.classList.add('hidden');
+}

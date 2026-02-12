@@ -239,6 +239,21 @@ body {
   100% { transform: scale(1); opacity: 1; }
 }
 
+#sound-hint {
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.5rem 1rem;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(0, 217, 255, 0.4);
+  color: #00D9FF;
+  font-size: 0.9rem;
+  border-radius: 4px;
+  pointer-events: none;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
 .hidden {
   display: none !important;
 }

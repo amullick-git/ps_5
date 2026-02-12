@@ -28,13 +28,13 @@ export function createObstacleSpawner(width, height) {
 
   function getSpawnInterval(currentLevel = 1) {
     const l = Math.max(0, currentLevel - 1);
-    const t = Math.min(l * 0.12, 1);
+    const t = Math.min(l * 0.06, 1); // Slower ramp: ~17 levels to max
     return SPAWN_INTERVAL_START - (SPAWN_INTERVAL_START - SPAWN_INTERVAL_MIN) * t;
   }
 
   function getSpeed(currentLevel = 1) {
     const l = Math.max(0, currentLevel - 1);
-    const t = Math.min(l * 0.1, 1);
+    const t = Math.min(l * 0.05, 1); // Slower ramp: ~21 levels to max
     return BASE_SPEED + (MAX_SPEED - BASE_SPEED) * t;
   }
 

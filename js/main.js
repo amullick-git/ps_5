@@ -32,6 +32,7 @@ let lastPausePressed = false;
 let rafId = 0;
 let startGameOnNextFrame = false;
 let activated = false;
+let activatedAt = 0;
 
 function startPlaying() {
   state = 'PLAYING';
@@ -71,9 +72,15 @@ function loop(timestamp) {
   // First activation: click, keydown, or controller — start loop and unlock audio
   if (!activated && getAnyButtonPressed()) {
     activated = true;
+    activatedAt = timestamp;
     audio.initAudio();
     audio.resumeAudio();
     startGameOnNextFrame = true;
+  }
+
+  // If audio is blocked (e.g. controller-only start on Windows), prompt for a click
+  if (activated && !audio.isAudioRunning() && timestamp - activatedAt > 1.5) {
+    ui.showSoundHint?.();
   }
 
   const anyBtn = getAnyButtonPressed();
@@ -133,6 +140,17 @@ function init() {
   initController();
   ui.showMenu();
 
+  // Unlock audio on any real user gesture (required on Windows / strict browsers).
+  // Gamepad alone does NOT count as a user gesture, so audio stays muted.
+  const unlockAudio = () => {
+    audio.initAudio();
+    audio.resumeAudio();
+    ui.hideSoundHint?.();
+  };
+  document.addEventListener('click', unlockAudio, { once: false });
+  document.addEventListener('keydown', unlockAudio, { once: false });
+  document.addEventListener('touchstart', unlockAudio, { once: false, passive: true });
+
   // Activation: click, keydown, or controller button (loop polls gamepad)
   const activate = () => {
     if (activated) return;
@@ -141,6 +159,7 @@ function init() {
     document.removeEventListener('keydown', activate);
     audio.initAudio();
     audio.resumeAudio();
+    activatedAt = performance.now();
     lastTime = performance.now();
     startGameOnNextFrame = true;
   };

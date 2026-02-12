@@ -21,7 +21,7 @@ export function createCollectibleSpawner(width, height) {
   const collectibles = [];
 
   function getSpawnInterval(currentLevel) {
-    const t = Math.min((currentLevel - 1) * 0.08, 1);
+    const t = Math.min((currentLevel - 1) * 0.04, 1); // Slower ramp
     return SPAWN_INTERVAL_BASE - (SPAWN_INTERVAL_BASE - SPAWN_INTERVAL_MIN) * t;
   }
 

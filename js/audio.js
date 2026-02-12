@@ -17,6 +17,11 @@ export function resumeAudio() {
   }
 }
 
+/** True if audio context exists and is running (unlocked for playback). */
+export function isAudioRunning() {
+  return ctx?.state === 'running';
+}
+
 function playTone(freq, duration, type = 'sine', volume = 0.3) {
   if (!ctx) return;
   const osc = ctx.createOscillator();
