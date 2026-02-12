@@ -4,11 +4,11 @@
  */
 
 const RADIUS = 18;
-const SPAWN_INTERVAL_BASE = 1.2;
-const SPAWN_INTERVAL_MIN = 0.7;
+const SPAWN_INTERVAL_BASE = 2.5;
+const SPAWN_INTERVAL_MIN = 1.5;
 const MIN_LIFETIME = 6;
 const MAX_LIFETIME = 12;
-const MAX_ON_SCREEN = 6;
+const MAX_ON_SCREEN = 1;
 const POINTS = [50, 75, 100];
 // Color by points: 50=gold, 75=cyan, 100=magenta
 const COLOR_BY_POINTS = { 50: 0xFFD700, 75: 0x00BCD4, 100: 0xE91E63 };

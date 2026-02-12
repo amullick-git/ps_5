@@ -45,8 +45,13 @@ export function playPass() {
 
 export function playCollect() {
   if (!ctx) return;
-  playTone(880, 0.06, 'sine', 0.2);
-  setTimeout(() => playTone(1100, 0.08, 'sine', 0.15), 40);
+  // Ascending sparkle chime — pleasant power-up feel
+  const notes = [523.25, 659.25, 783.99, 1046.5];
+  notes.forEach((freq, i) => {
+    setTimeout(() => {
+      playTone(freq, 0.12, 'sine', 0.25 - i * 0.04);
+    }, i * 45);
+  });
 }
 
 export function playNearMiss() {

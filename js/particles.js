@@ -2,7 +2,7 @@
  * Particle burst — brief explosion on game over.
  */
 
-export function createParticleBurst(x, y, count = 24) {
+export function createParticleBurst(x, y, count = 24, color = 0xE53935) {
   const particles = [];
   for (let i = 0; i < count; i++) {
     const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
@@ -14,6 +14,26 @@ export function createParticleBurst(x, y, count = 24) {
       life: 0.5,
       maxLife: 0.5,
       size: 4 + Math.random() * 4,
+      color,
+    });
+  }
+  return particles;
+}
+
+export function createCollectibleBurst(x, y, color = 0xFFD700) {
+  const particles = [];
+  const count = 14;
+  for (let i = 0; i < count; i++) {
+    const angle = (Math.PI * 2 * i) / count + Math.random() * 0.6;
+    const speed = 60 + Math.random() * 90;
+    particles.push({
+      x, y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      life: 0.35,
+      maxLife: 0.35,
+      size: 3 + Math.random() * 3,
+      color,
     });
   }
   return particles;

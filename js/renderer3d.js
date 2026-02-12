@@ -21,8 +21,8 @@ const playerGeometry = new THREE.SphereGeometry(0.2, 32, 32);
 const playerMaterial = new THREE.MeshStandardMaterial({ color: 0x4CAF50 });
 const particleGeometry = new THREE.SphereGeometry(0.05, 12, 12);
 const particleMaterial = new THREE.MeshBasicMaterial({ color: 0xE53935, transparent: true });
-// Octahedron (diamond) — distinct from player sphere and obstacle boxes
-const collectibleGeometry = new THREE.OctahedronGeometry(0.22, 0);
+// Torus (ring) — clearly distinct from player sphere and obstacle boxes
+const collectibleGeometry = new THREE.TorusGeometry(0.2, 0.08, 12, 16);
 
 export function init(canvas, width, height) {
   if (scene) return;
@@ -78,16 +78,24 @@ export function render(player, obstacles, collectibles, particles, shakeX, shake
   for (const c of collectibles || []) {
     if (!c.mesh) {
       const color = c.color ?? 0xFFD700;
-      const emissive = new THREE.Color(color).multiplyScalar(0.5);
-      const mat = new THREE.MeshStandardMaterial({ color, emissive });
+      const emissive = new THREE.Color(color);
+      const mat = new THREE.MeshStandardMaterial({
+        color,
+        emissive,
+        emissiveIntensity: 0.8,
+        metalness: 0.6,
+      });
       c.mesh = new THREE.Mesh(collectibleGeometry.clone(), mat);
+      c.mesh.rotation.x = Math.PI / 2;
       scene.add(c.mesh);
       collectibleMeshes.add(c.mesh);
     }
     const [cx, cz] = to3D(c.x, c.y);
-    const bob = Math.sin(t) * 0.05;
-    c.mesh.position.set(cx, 0.15 + bob, cz);
+    const bob = Math.sin(t) * 0.06;
+    const pulse = 1 + Math.sin(t * 2) * 0.08;
+    c.mesh.position.set(cx, 0.2 + bob, cz);
     c.mesh.rotation.y = t;
+    c.mesh.scale.setScalar(pulse);
     c.mesh.visible = true;
   }
 
@@ -123,6 +131,9 @@ export function render(player, obstacles, collectibles, particles, shakeX, shake
     const [mx, mz] = to3D(p.x, p.y);
     particleMeshes[i].position.set(mx, 0.1, mz);
     particleMeshes[i].material.opacity = p.life / p.maxLife;
+    if (p.color !== undefined) {
+      particleMeshes[i].material.color.setHex(p.color);
+    }
     particleMeshes[i].visible = true;
   });
 

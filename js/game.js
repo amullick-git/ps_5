@@ -5,7 +5,7 @@
 import { getMovement } from './controller.js';
 import { updatePlayer } from './player.js';
 import { checkPlayerObstacles, checkPlayerCollectibles, closestObstacleDistance } from './collision.js';
-import { createParticleBurst, updateParticles } from './particles.js';
+import { createParticleBurst, createCollectibleBurst, updateParticles } from './particles.js';
 import { createCollectibleSpawner } from './collectible.js';
 import * as audio from './audio.js';
 import * as renderer3d from './renderer3d.js';
@@ -86,11 +86,13 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
     if (levelUpAnimTimer > 0) levelUpAnimTimer -= dt;
 
     collectibleSpawner.update(dt, (c) => renderer3d.onCollectibleRemoved?.(c), level);
+    particles = updateParticles(particles, dt);
 
     const collected = checkPlayerCollectibles(player, collectibleSpawner.collectibles);
     for (const c of collected) {
       audio.playCollect();
       onScoreUpdate?.(c.points);
+      particles = particles.concat(createCollectibleBurst(c.x, c.y, c.color));
       renderer3d.onCollectibleRemoved?.(c);
       const idx = collectibleSpawner.collectibles.indexOf(c);
       if (idx >= 0) collectibleSpawner.collectibles.splice(idx, 1);
