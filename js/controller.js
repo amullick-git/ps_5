@@ -113,26 +113,50 @@ export function clearButtonState() {
 
 /**
  * Trigger haptic feedback on the connected gamepad.
- * Falls back to vibrationActuator or hapticActuators API; no-op if unavailable.
+ * Uses playEffect("dual-rumble") when available (better DualSense support), else pulse().
  * @param {'collect'|'collision'|'nearMiss'|'levelUp'} type - Event type for different patterns
  */
+let _hapticWarned = false;
+
 export function triggerHaptic(type) {
   const pad = navigator.getGamepads?.()?.[0];
   const actuator = pad?.vibrationActuator ?? pad?.hapticActuators?.[0];
-  if (!actuator?.pulse) return;
+  if (!actuator) {
+    if (!_hapticWarned) {
+      _hapticWarned = true;
+      console.info('[Dodge Run] Haptic: No actuator on this controller/browser. On macOS, haptics do not work in browsers.');
+    }
+    return;
+  }
 
+  // Stronger, longer patterns — user wasn't feeling weaker ones
   const patterns = {
-    collect: { intensity: 0.3, duration: 60 },
-    collision: { intensity: 1, duration: 220 },
-    nearMiss: { intensity: 0.4, duration: 50 },
-    levelUp: { intensity: 0.6, duration: 120 },
+    collect: { intensity: 0.7, duration: 120 },
+    collision: { intensity: 1, duration: 350 },
+    nearMiss: { intensity: 0.6, duration: 100 },
+    levelUp: { intensity: 0.9, duration: 180 },
   };
-  const { intensity, duration } = patterns[type] ?? { intensity: 0.5, duration: 100 };
-  actuator.pulse(intensity, duration);
+  const { intensity, duration } = patterns[type] ?? { intensity: 0.8, duration: 150 };
 
-  if (type === 'levelUp') {
+  const usePlayEffect = actuator.playEffect && (actuator.effects?.includes?.('dual-rumble') ?? true);
+  if (usePlayEffect) {
+    actuator.playEffect('dual-rumble', {
+      duration,
+      strongMagnitude: intensity,
+      weakMagnitude: intensity * 0.8,
+      startDelay: 0,
+    }).catch(() => {});
+  } else if (actuator.pulse) {
+    actuator.pulse(intensity, duration);
+  }
+
+  if (type === 'levelUp' && actuator) {
     setTimeout(() => {
-      actuator.pulse?.(0.4, 80);
-    }, 100);
+      if (usePlayEffect) {
+        actuator.playEffect('dual-rumble', { duration: 100, strongMagnitude: 0.6, weakMagnitude: 0.5, startDelay: 0 }).catch(() => {});
+      } else if (actuator.pulse) {
+        actuator.pulse(0.6, 100);
+      }
+    }, 120);
   }
 }

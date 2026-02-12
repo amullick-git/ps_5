@@ -23,6 +23,10 @@ Then open **http://localhost:8000** in your browser.
 
 > **Note:** The Gamepad API requires user interaction before it activates. Click or press any key on the page first, then use your controller.
 
+## Haptic Feedback
+
+The game triggers controller vibration on collect, collision, near-miss, and level-up. **Note:** Haptic feedback works on Windows but **does not work on macOS** in any browser — this is a platform limitation, not a bug.
+
 ## Controls
 
 | Input | Action |

@@ -31,6 +31,7 @@ let gameInstance = null;
 let lastPausePressed = false;
 let rafId = 0;
 let startGameOnNextFrame = false;
+let activated = false;
 
 function startPlaying() {
   state = 'PLAYING';
@@ -66,6 +67,14 @@ function onLevelUp(level) {
 function loop(timestamp) {
   const dt = Math.min((timestamp - lastTime) / 1000, 0.1);
   lastTime = timestamp;
+
+  // First activation: click, keydown, or controller — start loop and unlock audio
+  if (!activated && getAnyButtonPressed()) {
+    activated = true;
+    audio.initAudio();
+    audio.resumeAudio();
+    startGameOnNextFrame = true;
+  }
 
   const anyBtn = getAnyButtonPressed();
   const pauseBtn = getPausePressed();
@@ -124,18 +133,22 @@ function init() {
   initController();
   ui.showMenu();
 
-  // Start loop on first user interaction (required for Gamepad API + Audio)
-  const start = () => {
-    document.removeEventListener('click', start);
-    document.removeEventListener('keydown', start);
+  // Activation: click, keydown, or controller button (loop polls gamepad)
+  const activate = () => {
+    if (activated) return;
+    activated = true;
+    document.removeEventListener('click', activate);
+    document.removeEventListener('keydown', activate);
     audio.initAudio();
     audio.resumeAudio();
     lastTime = performance.now();
     startGameOnNextFrame = true;
-    rafId = requestAnimationFrame(loop);
   };
-  document.addEventListener('click', start);
-  document.addEventListener('keydown', start);
+  document.addEventListener('click', activate);
+  document.addEventListener('keydown', activate);
+
+  lastTime = performance.now();
+  rafId = requestAnimationFrame(loop);
 }
 
 init();
