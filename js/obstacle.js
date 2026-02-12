@@ -104,10 +104,16 @@ export function createObstacleSpawner(width, height) {
       }
     },
     removeOutside(width, height) {
+      // Only remove when obstacle has exited in the direction it's moving
+      // (don't remove spawns that are still approaching from outside)
       let cleared = 0;
       for (let i = obstacles.length - 1; i >= 0; i--) {
         const o = obstacles[i];
-        if (o.x + o.w < 0 || o.x > width || o.y + o.h < 0 || o.y > height) {
+        const exitedRight = o.vx > 0 && o.x > width;
+        const exitedLeft = o.vx < 0 && o.x + o.w < 0;
+        const exitedDown = o.vy > 0 && o.y > height;
+        const exitedUp = o.vy < 0 && o.y + o.h < 0;
+        if (exitedRight || exitedLeft || exitedDown || exitedUp) {
           obstacles.splice(i, 1);
           cleared++;
         }
