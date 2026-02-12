@@ -58,7 +58,7 @@ export function renderBackground() {
   renderer.render(scene, camera);
 }
 
-export function render(player, obstacles, particles, shakeX, shakeY, nearMissGlow) {
+export function render(player, obstacles, particles, shakeX, shakeY, nearMissGlow, hideObstacles = false) {
   if (!scene || !camera || !renderer) return;
 
   const [px, pz] = to3D(player.x, player.y);
@@ -77,7 +77,7 @@ export function render(player, obstacles, particles, shakeX, shakeY, nearMissGlo
     }
     const [ox, oz] = to3D(o.x + o.w / 2, o.y + o.h / 2);
     o.mesh.position.set(ox, 0.15, oz);
-    o.mesh.visible = true;
+    o.mesh.visible = !hideObstacles;
   }
 
   while (particleMeshes.length > particles.length) {

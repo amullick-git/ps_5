@@ -33,11 +33,10 @@ export function createGame(canvas, player, obstacleSpawner, onGameOver, onScoreU
   const onObstacleRemoved = (o) => renderer3d.onObstacleRemoved(o);
 
   function update(dt) {
-    const movement = getMovement();
-    updatePlayer(player, movement, dt, width, height);
-
     // Countdown phase
     if (countdownTimer > 0) {
+      const movement = getMovement();
+      updatePlayer(player, movement, dt, width, height);
       countdownTimer -= dt;
       const prev = countdownPhase;
       if (countdownTimer > 2.5) countdownPhase = 3;
@@ -52,7 +51,7 @@ export function createGame(canvas, player, obstacleSpawner, onGameOver, onScoreU
       return { countdownPhase, countdownTimer };
     }
 
-    // Game over animation
+    // Game over animation — no player movement
     if (gameOverAnimTimer > 0) {
       gameOverAnimTimer -= dt;
       particles = updateParticles(particles, dt);
@@ -62,6 +61,8 @@ export function createGame(canvas, player, obstacleSpawner, onGameOver, onScoreU
       return {};
     }
 
+    const movement = getMovement();
+    updatePlayer(player, movement, dt, width, height);
     obstacleSpawner.update(dt);
 
     const cleared = obstacleSpawner.removeOutside(width, height, onObstacleRemoved);
@@ -88,6 +89,7 @@ export function createGame(canvas, player, obstacleSpawner, onGameOver, onScoreU
       audio.playHit();
       particles = createParticleBurst(player.x, player.y);
       shakeX = shakeY = 20;
+      nearMissGlow = 0;
       gameOverAnimTimer = 0.5;
     }
 
@@ -95,7 +97,16 @@ export function createGame(canvas, player, obstacleSpawner, onGameOver, onScoreU
   }
 
   function render() {
-    renderer3d.render(player, obstacleSpawner.obstacles, particles, shakeX, shakeY, nearMissGlow);
+    const glow = gameOverAnimTimer > 0 ? 0 : nearMissGlow;
+    renderer3d.render(
+      player,
+      obstacleSpawner.obstacles,
+      particles,
+      shakeX,
+      shakeY,
+      glow,
+      false
+    );
   }
 
   return {
