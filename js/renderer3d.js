@@ -18,7 +18,13 @@ let playerMesh, particleMeshes = [];
 let obstacleMeshes = new Set();
 let collectibleMeshes = new Set();
 const playerGeometry = new THREE.SphereGeometry(0.2, 32, 32);
-const playerMaterial = new THREE.MeshStandardMaterial({ color: 0x4CAF50 });
+const playerMaterial = new THREE.MeshStandardMaterial({
+  color: 0x5EFF5E,
+  emissive: 0x22DD22,
+  emissiveIntensity: 0.15,
+  metalness: 0.3,
+  roughness: 0.4,
+});
 const particleGeometry = new THREE.SphereGeometry(0.05, 12, 12);
 const particleMaterial = new THREE.MeshBasicMaterial({ color: 0xE53935, transparent: true });
 // Torus (ring) — clearly distinct from player sphere and obstacle boxes
@@ -72,7 +78,11 @@ export function render(player, obstacles, collectibles, particles, shakeX, shake
   const [px, pz] = to3D(player.x, player.y);
   playerMesh.position.set(px, 0.2, pz);
   playerMesh.visible = true;
-  playerMesh.material.emissive = new THREE.Color(0xFFEB3B).multiplyScalar(nearMissGlow * 0.5);
+  const baseEmissive = new THREE.Color(0x22DD22).multiplyScalar(0.15);
+  const nearMissEmissive = new THREE.Color(0xFFEB3B).multiplyScalar(nearMissGlow * 0.2);
+  playerMesh.material.emissive.copy(baseEmissive).add(nearMissEmissive);
+  const pulse = 1 + Math.sin(Date.now() * 0.003) * 0.03;
+  playerMesh.scale.setScalar(pulse);
 
   const t = Date.now() * 0.002;
   for (const c of collectibles || []) {
@@ -82,7 +92,7 @@ export function render(player, obstacles, collectibles, particles, shakeX, shake
       const mat = new THREE.MeshStandardMaterial({
         color,
         emissive,
-        emissiveIntensity: 0.8,
+        emissiveIntensity: 0.25,
         metalness: 0.6,
       });
       c.mesh = new THREE.Mesh(collectibleGeometry.clone(), mat);
@@ -102,7 +112,7 @@ export function render(player, obstacles, collectibles, particles, shakeX, shake
   for (const o of obstacles) {
     if (!o.mesh) {
       const color = o.color ?? 0xE53935;
-      const emissive = new THREE.Color(color).multiplyScalar(0.3);
+      const emissive = new THREE.Color(color).multiplyScalar(0.12);
       const mat = new THREE.MeshStandardMaterial({ color, emissive });
       o.mesh = new THREE.Mesh(
         new THREE.BoxGeometry(o.w / SCALE, 0.3, o.h / SCALE, 2, 2, 2),
