@@ -16,10 +16,10 @@ function to3D(x, y) {
 let scene, camera, renderer;
 let playerMesh, particleMeshes = [];
 let obstacleMeshes = new Set();
-const playerGeometry = new THREE.SphereGeometry(0.2, 16, 16);
+const playerGeometry = new THREE.SphereGeometry(0.2, 32, 32);
 const playerMaterial = new THREE.MeshStandardMaterial({ color: 0x4CAF50 });
 const obstacleMaterial = new THREE.MeshStandardMaterial({ color: 0xE53935 });
-const particleGeometry = new THREE.SphereGeometry(0.05, 8, 8);
+const particleGeometry = new THREE.SphereGeometry(0.05, 12, 12);
 const particleMaterial = new THREE.MeshBasicMaterial({ color: 0xE53935, transparent: true });
 
 export function init(canvas, width, height) {
@@ -45,9 +45,15 @@ export function init(canvas, width, height) {
   dir.position.set(3, 10, 5);
   scene.add(dir);
 
-  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+  const dpr = Math.min(window.devicePixelRatio || 1, 3);
+  renderer = new THREE.WebGLRenderer({
+    canvas,
+    antialias: true,
+    alpha: false,
+    powerPreference: 'high-performance',
+  });
+  renderer.setPixelRatio(dpr);
   renderer.setSize(width, height);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
   playerMesh = new THREE.Mesh(playerGeometry, playerMaterial.clone());
   scene.add(playerMesh);
@@ -69,7 +75,7 @@ export function render(player, obstacles, particles, shakeX, shakeY, nearMissGlo
   for (const o of obstacles) {
     if (!o.mesh) {
       o.mesh = new THREE.Mesh(
-        new THREE.BoxGeometry(o.w / SCALE, 0.3, o.h / SCALE),
+        new THREE.BoxGeometry(o.w / SCALE, 0.3, o.h / SCALE, 2, 2, 2),
         obstacleMaterial.clone()
       );
       scene.add(o.mesh);
@@ -130,7 +136,9 @@ export function reset() {
 
 export function resize(width, height) {
   if (!camera || !renderer) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 3);
   camera.aspect = width / height;
   camera.updateProjectionMatrix();
+  renderer.setPixelRatio(dpr);
   renderer.setSize(width, height);
 }

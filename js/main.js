@@ -15,9 +15,10 @@ const WIDTH = 800;
 const HEIGHT = 600;
 
 function resizeCanvas() {
-  canvas.width = WIDTH;
-  canvas.height = HEIGHT;
-  renderer3d.resize?.(WIDTH, HEIGHT);
+  const rect = canvas.getBoundingClientRect();
+  const displayWidth = Math.max(rect.width || WIDTH, 1);
+  const displayHeight = Math.max(rect.height || HEIGHT, 1);
+  renderer3d.resize?.(displayWidth, displayHeight);
 }
 
 const player = createPlayer(WIDTH, HEIGHT);
@@ -111,9 +112,9 @@ function loop(timestamp) {
 let lastTime = 0;
 
 function init() {
-  resizeCanvas();
   renderer3d.init(canvas, WIDTH, HEIGHT);
-  window.addEventListener('resize', resizeCanvas);
+  requestAnimationFrame(() => resizeCanvas());
+  window.addEventListener('resize', () => requestAnimationFrame(resizeCanvas));
   initController();
   ui.showMenu();
 

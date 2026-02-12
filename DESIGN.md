@@ -28,7 +28,7 @@
 | Layer | Technology | Rationale |
 |-------|------------|-----------|
 | Runtime | Modern web browser (Chrome, Firefox, Edge, Safari) | Gamepad API support, no install |
-| Rendering | HTML5 Canvas 2D | Simple 2D drawing, good performance |
+| Rendering | Three.js / WebGL | 3D spheres and boxes; sharp on retina |
 | Logic | Vanilla JavaScript (ES6+) | No build step, easy to understand |
 | Styling | CSS3 | Layout, responsive framing, minimal |
 
@@ -52,7 +52,8 @@ ps_5/
 │   ├── obstacle.js         # Obstacle spawner, types, movement
 │   ├── collision.js        # Collision detection (AABB)
 │   ├── particles.js        # Particle burst on game over
-│   ├── audio.js            # Web Audio: hit, pass, menu, BGM
+│   ├── renderer3d.js       # Three.js 3D renderer
+│   ├── audio.js            # Web Audio: hit, pass, menu, BGM, near-miss
 │   └── ui.js               # HUD, menus, score display
 ├── assets/                 # (Optional) sprites, sounds
 │   ├── sprites/
@@ -138,7 +139,7 @@ ps_5/
 ### 5.2 Canvas & Dimensions
 - **Base resolution**: 800 × 600 (logical game units).
 - **Scaling**: Canvas scales to fit viewport; aspect ratio preserved (letterboxing).
-- **Device pixel ratio**: Optional HiDPI scaling for sharp rendering.
+- **Retina / HiDPI**: `setPixelRatio(devicePixelRatio)` up to 3×; `getBoundingClientRect()` for display size; higher geometry detail (player 32×32, particles 12×12, boxes segmented); `powerPreference: 'high-performance'`.
 
 ### 5.3 Player
 
@@ -221,17 +222,17 @@ ps_5/
 - Large title, readable score, clear "Press to start" text.
 
 ### 8.3 Effects
-- Simple filled shapes (no sprites).
+- 3D rendering (spheres, boxes) via Three.js.
 - Particle burst on game over (implemented).
 - Screen shake on hit (implemented).
-- Near-miss glow (cyan pulse when obstacle within ~55 px; implemented).
+- Near-miss glow (yellow pulse when obstacle within ~55 px; implemented).
 
 ---
 
 ## 9. Audio
 
-- **BGM**: Low-key sine loop (110 Hz) during gameplay.
-- **SFX**: Hit (thud on collision), pass (tone on obstacle cleared), menu select (click on start/restart).
+- **BGM**: Low-key sine loop (110 Hz) during gameplay; starts after countdown.
+- **SFX**: Hit (thud on collision), pass (tone on obstacle cleared), menu select (click on start/restart), near-miss (descending pitch 660→440 Hz, ~0.22 s) when obstacle within ~55 px; 0.4 s cooldown.
 - **Implementation**: Web Audio API; procedural generation, no external files; init on first user interaction.
 
 ---
@@ -290,11 +291,14 @@ ps_5/
 - [x] Keyboard fallback (optional)
 
 ### Phase 6: Polish & Feedback (v1.1)
-- [x] **Web Audio** — Hit (low thud on collision), pass (tone on obstacle cleared), menu select (soft click on start/restart), BGM (low-key 110 Hz sine loop during gameplay). Procedural generation via Web Audio API; no external files.
+- [x] **Web Audio** — Hit (low thud on collision), pass (tone on obstacle cleared), menu select (soft click on start/restart), BGM (low-key 110 Hz sine loop; starts after "Go!"), near-miss (descending tone ~0.22 s when obstacle within ~55 px; 0.4 s cooldown). Procedural generation via Web Audio API; no external files.
 - [x] **Particle burst** — Brief explosion (~24 particles) emanating from player on game over; red particles with velocity and fade; ~0.5 s duration before game over screen.
-- [x] **Screen shake** — Canvas offset on hit; shake decays over ~0.5 s.
-- [x] **Near-miss glow** — Subtle cyan glow on player when obstacle is within ~55 px (no collision); intensity fades when obstacle moves away.
+- [x] **Screen shake** — Camera offset on hit; shake decays over ~0.5 s.
+- [x] **Near-miss glow** — Yellow emissive on player when obstacle within ~55 px (no collision); intensity fades when obstacle moves away; glow resets on collision.
 - [x] **Countdown** — "3… 2… 1… Go!" overlay before obstacles spawn; ~3.5 s total; beeps for 3/2/1, fanfare for Go!; player can move during countdown; obstacles spawn only after "Go!".
+- [x] **3D rendering** — Three.js; player sphere, obstacle boxes, particle spheres; top-down perspective.
+- [x] **Collision behavior** — Player freezes at collision point; no movement during game-over animation.
+- [x] **Retina / HiDPI** — `setPixelRatio` up to 3×; `getBoundingClientRect()` for display size; higher geometry detail (player 32×32, particles 12×12); `powerPreference: 'high-performance'`.
 
 ### Phase 7: Optional
 - [ ] Multiple obstacle shapes (circles)
@@ -340,5 +344,5 @@ ps_5/
 
 ---
 
-*Document Version: 1.2*  
+*Document Version: 1.3*  
 *Last Updated: 2026-02-12*
