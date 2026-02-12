@@ -352,7 +352,7 @@ ps_5/
 *Review comments for implementation reference.*
 
 ### Strengths
-- **Clear scope** — Core loop, pillars, and “no framework” are stated up front.
+- **Clear scope** — Core loop, pillars, and "no framework" are stated up front.
 - **Concrete tech choices** — Canvas 2D, vanilla JS, Gamepad API, and file layout are specified and justified.
 - **State machine** — MENU → PLAYING ↔ PAUSED, PLAYING → GAME_OVER, and transitions are defined with a diagram and table.
 - **Input spec** — DualSense axes/buttons, dead zone (0.15), normalization, and keyboard fallback are documented.
@@ -378,5 +378,157 @@ ps_5/
 
 ---
 
-*Document Version: 1.4*  
+## 15. Web APIs Usage
+
+This section documents how the game uses browser and platform APIs, with code examples and references.
+
+### 15.1 Gamepad API
+
+**Purpose**: Read controller input (axes, buttons) and trigger haptic feedback.
+
+**Polling axes and buttons** (controller.js):
+
+```javascript
+const gp = navigator.getGamepads?.();
+const pad = gp?.[0];           // Primary controller (index 0)
+if (pad) {
+  let x = pad.axes[0] ?? 0;    // Left stick X (-1 to 1)
+  let y = pad.axes[1] ?? 0;    // Left stick Y (-1 to 1)
+  if (pad.buttons[9]?.pressed) { /* Options = pause */ }
+}
+```
+
+**Haptic feedback** (controller.js) — `vibrationActuator` or `hapticActuators`:
+
+```javascript
+const actuator = pad?.vibrationActuator ?? pad?.hapticActuators?.[0];
+if (actuator?.pulse) {
+  actuator.pulse(intensity, duration);  // intensity 0–1, duration in ms
+}
+```
+
+**Events**: `gamepadconnected`, `gamepaddisconnected` for presence; polling via `getGamepads()` each frame.
+
+**Browser support**: Gamepad API widely supported; haptic (`vibrationActuator` / `hapticActuators`) in Chrome, Edge, Safari 16.4+; not in Firefox.
+
+---
+
+### 15.2 Web Audio API
+
+**Purpose**: Procedural sound effects and BGM with no audio files.
+
+**Context creation** (audio.js):
+
+```javascript
+ctx = new (window.AudioContext || window.webkitAudioContext)();
+```
+
+**Tone generation** — oscillator + gain node:
+
+```javascript
+const osc = ctx.createOscillator();
+const gain = ctx.createGain();
+osc.connect(gain);
+gain.connect(ctx.destination);
+osc.frequency.value = 523.25;   // Hz
+osc.type = 'sine';
+gain.gain.setValueAtTime(0.3, ctx.currentTime);
+gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+osc.start(ctx.currentTime);
+osc.stop(ctx.currentTime + 0.12);
+```
+
+**BGM** — low-frequency sine with biquad filter for warmth.
+
+**User activation**: `initAudio()` and `resumeAudio()` called on first user interaction (required for autoplay policies).
+
+---
+
+### 15.3 DOM / Document APIs
+
+**Purpose**: UI updates, layout, and canvas sizing.
+
+**Element lookup and manipulation** (ui.js):
+
+```javascript
+const el = document.getElementById('score-display');
+if (el) el.textContent = `Score: ${score}`;
+el.classList.add('hidden');
+el.classList.remove('hidden');
+```
+
+**Canvas dimensions** (main.js, renderer3d.js):
+
+```javascript
+const rect = canvas.getBoundingClientRect();
+displayWidth = Math.max(rect.width || WIDTH, 1);
+```
+
+**Events**: `keydown`, `keyup`, `resize`, `click` for input and layout.
+
+---
+
+### 15.4 Web Storage (localStorage)
+
+**Purpose**: Persist high score across sessions.
+
+**Usage** (ui.js):
+
+```javascript
+const HIGH_SCORE_KEY = 'dodgeRunHighScore';
+localStorage.getItem(HIGH_SCORE_KEY) || '0';
+localStorage.setItem(HIGH_SCORE_KEY, String(score));
+```
+
+---
+
+### 15.5 requestAnimationFrame & performance
+
+**Purpose**: Game loop and frame-independent timing.
+
+**Loop** (main.js):
+
+```javascript
+function loop(timestamp) {
+  const dt = Math.min((timestamp - lastTime) / 1000, 0.1);
+  lastTime = timestamp;
+  // ... update, render ...
+  rafId = requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+```
+
+**Delta time**: `performance.now()` or `timestamp` from `requestAnimationFrame` used for consistent movement regardless of frame rate.
+
+---
+
+### 15.6 Three.js / WebGL
+
+**Purpose**: 3D rendering (player, obstacles, collectibles, particles).
+
+**Scene setup** (renderer3d.js):
+
+```javascript
+import * as THREE from 'three';
+scene = new THREE.Scene();
+camera = new THREE.PerspectiveCamera(50, width/height, 0.1, 100);
+renderer = new WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 3));
+```
+
+**Geometry and materials**:
+
+```javascript
+const mesh = new THREE.Mesh(
+  new THREE.SphereGeometry(0.2, 32, 32),
+  new THREE.MeshStandardMaterial({ color: 0x5EFF5E, emissive: 0x22DD22 })
+);
+scene.add(mesh);
+```
+
+**CDN**: Three.js loaded via import map from jsdelivr.
+
+---
+
+*Document Version: 1.5*  
 *Last Updated: 2026-02-12*

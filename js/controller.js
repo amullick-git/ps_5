@@ -110,3 +110,29 @@ export function getPausePressed() {
 export function clearButtonState() {
   keys = {};
 }
+
+/**
+ * Trigger haptic feedback on the connected gamepad.
+ * Falls back to vibrationActuator or hapticActuators API; no-op if unavailable.
+ * @param {'collect'|'collision'|'nearMiss'|'levelUp'} type - Event type for different patterns
+ */
+export function triggerHaptic(type) {
+  const pad = navigator.getGamepads?.()?.[0];
+  const actuator = pad?.vibrationActuator ?? pad?.hapticActuators?.[0];
+  if (!actuator?.pulse) return;
+
+  const patterns = {
+    collect: { intensity: 0.3, duration: 60 },
+    collision: { intensity: 1, duration: 220 },
+    nearMiss: { intensity: 0.4, duration: 50 },
+    levelUp: { intensity: 0.6, duration: 120 },
+  };
+  const { intensity, duration } = patterns[type] ?? { intensity: 0.5, duration: 100 };
+  actuator.pulse(intensity, duration);
+
+  if (type === 'levelUp') {
+    setTimeout(() => {
+      actuator.pulse?.(0.4, 80);
+    }, 100);
+  }
+}

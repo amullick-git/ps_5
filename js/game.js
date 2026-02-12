@@ -2,7 +2,7 @@
  * Game loop — update and render orchestration.
  */
 
-import { getMovement } from './controller.js';
+import { getMovement, triggerHaptic } from './controller.js';
 import { updatePlayer } from './player.js';
 import { checkPlayerObstacles, checkPlayerCollectibles, closestObstacleDistance } from './collision.js';
 import { createParticleBurst, createCollectibleBurst, updateParticles } from './particles.js';
@@ -81,6 +81,7 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
       level = newLevel;
       levelUpAnimTimer = 1.2;
       audio.playLevelUp?.();
+      triggerHaptic('levelUp');
       onLevelUp?.(level);
     }
     if (levelUpAnimTimer > 0) levelUpAnimTimer -= dt;
@@ -91,6 +92,7 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
     const collected = checkPlayerCollectibles(player, collectibleSpawner.collectibles);
     for (const c of collected) {
       audio.playCollect();
+      triggerHaptic('collect');
       onScoreUpdate?.(c.points);
       particles = particles.concat(createCollectibleBurst(c.x, c.y, c.color));
       renderer3d.onCollectibleRemoved?.(c);
@@ -110,6 +112,7 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
       nearMissGlow = Math.min(1, nearMissGlow + dt * 4);
       if (!wasNearMiss && nearMissCooldown <= 0) {
         audio.playNearMiss();
+        triggerHaptic('nearMiss');
         nearMissCooldown = 0.4;
       }
       wasNearMiss = true;
@@ -128,6 +131,7 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
 
     if (checkPlayerObstacles(player, obstacleSpawner.obstacles)) {
       audio.playHit();
+      triggerHaptic('collision');
       particles = createParticleBurst(player.x, player.y);
       shakeX = shakeY = 20;
       nearMissGlow = 0;
