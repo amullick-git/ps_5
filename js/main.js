@@ -27,6 +27,7 @@ const obstacleSpawner = createObstacleSpawner(WIDTH, HEIGHT);
 let state = 'MENU';
 let score = 0;
 let highScore = ui.getHighScore();
+let highLevel = ui.getHighLevel();
 let gameInstance = null;
 let lastPausePressed = false;
 let rafId = 0;
@@ -39,7 +40,8 @@ function startPlaying() {
   score = 0;
   resetPlayer(player, WIDTH, HEIGHT);
   highScore = ui.getHighScore();
-  ui.showPlaying(score, highScore);
+  highLevel = ui.getHighLevel();
+  ui.showPlaying(score, highScore, highLevel);
   gameInstance = createGame(canvas, WIDTH, HEIGHT, player, obstacleSpawner, onGameOver, addScore, onLevelUp);
   // BGM starts after countdown (handled in game loop)
 }
@@ -57,11 +59,21 @@ function addScore(points) {
 function onGameOver() {
   state = 'GAME_OVER';
   audio.stopBGM();
-  ui.showGameOver(score, highScore);
+  const level = gameInstance?.getLevel?.() ?? 1;
+  if (level > highLevel) {
+    highLevel = level;
+    ui.setHighLevel(highLevel);
+  }
+  ui.showGameOver(score, highScore, highLevel);
 }
 
 function onLevelUp(level) {
+  if (level > highLevel) {
+    highLevel = level;
+    ui.setHighLevel(highLevel);
+  }
   ui.updateLevel(level);
+  ui.updateHighLevel(highLevel);
   ui.showLevelUp(level);
 }
 

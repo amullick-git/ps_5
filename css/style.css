@@ -128,8 +128,10 @@ body {
   width: 100%;
   padding: 1rem;
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: flex-start;
+  gap: 0.5rem 1rem;
 }
 
 #level-display {
@@ -145,17 +147,18 @@ body {
   font-weight: 600;
 }
 
-#high-score-display {
+#high-score-display,
+#high-level-display {
   color: #00D9FF;
 }
 
 #pause-hint {
   color: #888;
   font-size: 0.85rem;
-  position: absolute;
-  top: 1rem;
-  left: 50%;
-  transform: translateX(-50%);
+  order: 10;
+  flex-basis: 100%;
+  text-align: center;
+  margin-top: 0.25rem;
 }
 
 #paused-overlay {

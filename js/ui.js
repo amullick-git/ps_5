@@ -1,9 +1,10 @@
 /**
  * UI — HUD, menus, score display.
- * localStorage key: dodgeRunHighScore
+ * localStorage keys: dodgeRunHighScore, dodgeRunHighLevel
  */
 
 const HIGH_SCORE_KEY = 'dodgeRunHighScore';
+const HIGH_LEVEL_KEY = 'dodgeRunHighLevel';
 
 export function getHighScore() {
   return parseInt(localStorage.getItem(HIGH_SCORE_KEY) || '0', 10);
@@ -11,6 +12,14 @@ export function getHighScore() {
 
 export function setHighScore(score) {
   localStorage.setItem(HIGH_SCORE_KEY, String(score));
+}
+
+export function getHighLevel() {
+  return parseInt(localStorage.getItem(HIGH_LEVEL_KEY) || '1', 10);
+}
+
+export function setHighLevel(level) {
+  localStorage.setItem(HIGH_LEVEL_KEY, String(level));
 }
 
 export function showLevelUp(level) {
@@ -40,16 +49,17 @@ export function showMenu() {
   document.getElementById('level-up-overlay')?.classList.add('hidden');
 }
 
-export function showPlaying(score, highScore) {
+export function showPlaying(score, highScore, highLevel = 1) {
   document.getElementById('menu-screen').classList.add('hidden');
   document.getElementById('game-over-screen').classList.add('hidden');
   document.getElementById('paused-overlay').classList.add('hidden');
   document.getElementById('hud').classList.remove('hidden');
   updateScore(score);
   updateHighScore(highScore);
+  updateHighLevel(highLevel);
 }
 
-export function showGameOver(score, highScore) {
+export function showGameOver(score, highScore, highLevel = 1) {
   document.getElementById('hud').classList.add('hidden');
   document.getElementById('menu-screen').classList.add('hidden');
   document.getElementById('paused-overlay').classList.add('hidden');
@@ -58,6 +68,8 @@ export function showGameOver(score, highScore) {
   document.getElementById('game-over-screen').classList.remove('hidden');
   document.getElementById('final-score').textContent = `Score: ${score}`;
   document.getElementById('final-high-score').textContent = `Best: ${highScore}`;
+  const levelEl = document.getElementById('final-high-level');
+  if (levelEl) levelEl.textContent = `Best level: ${highLevel}`;
 }
 
 export function showPaused() {
@@ -90,6 +102,11 @@ export function updateLevel(level) {
 export function updateHighScore(highScore) {
   const el = document.getElementById('high-score-display');
   if (el) el.textContent = `Best: ${highScore}`;
+}
+
+export function updateHighLevel(highLevel) {
+  const el = document.getElementById('high-level-display');
+  if (el) el.textContent = `Best Lvl: ${highLevel}`;
 }
 
 export function showSoundHint() {
