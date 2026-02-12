@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dodge Run — PS5 Controller Game</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="game-container">
+    <canvas id="game-canvas" width="800" height="600"></canvas>
+    <div id="ui-overlay">
+      <div id="menu-screen">
+        <h1>Dodge Run</h1>
+        <p>Use the left stick to move. Avoid the red obstacles!</p>
+        <p class="hint">Press any button or key to start</p>
+        <p class="controller-hint">Connect your PS5 controller for the best experience</p>
+      </div>
+      <div id="hud" class="hidden">
+        <div id="score-display">Score: 0</div>
+        <div id="high-score-display">Best: 0</div>
+        <div id="pause-hint">Options to pause</div>
+      </div>
+      <div id="game-over-screen" class="hidden">
+        <h2>Game Over</h2>
+        <p id="final-score">Score: 0</p>
+        <p id="final-high-score">Best: 0</p>
+        <p class="hint">Press any button or key to restart</p>
+      </div>
+      <div id="paused-overlay" class="hidden">
+        <h2>Paused</h2>
+        <p class="hint">Press Options to resume</p>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

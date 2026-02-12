@@ -82,7 +82,8 @@ ps_5/
           │         │  GAME_OVER  │   │   PAUSED    │
           │         └──────┬──────┘   └──────┬──────┘
           │                │                 │ Resume
-          │                │ Restart         │
+          │                │ Restart         │ (Options)
+          │                │ (any button)    │
           └────────────────┴─────────────────┘
 ```
 
@@ -91,9 +92,9 @@ ps_5/
 | State | Description | User Actions |
 |-------|-------------|--------------|
 | **MENU** | Title, instructions, "Press any button to start" | Any gamepad button or key → PLAYING |
-| **PLAYING** | Active gameplay | Collision → GAME_OVER; Pause button → PAUSED |
-| **GAME_OVER** | Score, high score, "Press any button to restart" | Any button → MENU → (then start) → PLAYING |
-| **PAUSED** | Overlay "Paused", dimmed game | Resume (same as pause) → PLAYING |
+| **PLAYING** | Active gameplay | Collision → GAME_OVER; Options button → PAUSED |
+| **GAME_OVER** | Score, high score, "Press any button to restart" | Any button → PLAYING (direct restart) |
+| **PAUSED** | Overlay "Paused", dimmed game | Options button (toggle) → PLAYING |
 
 ---
 
@@ -111,7 +112,7 @@ ps_5/
 | Button 1 | Circle (B) | — |
 | Button 2 | Square (X) | — |
 | Button 3 | Triangle (Y) | — |
-| Button 9 | Options | Pause / resume |
+| Button 9 | Options | Pause / resume (toggle) |
 
 ### 4.2 Input Normalization
 - **Dead zone**: 0.15 — Ignore stick drift.
@@ -148,13 +149,13 @@ ps_5/
 | Color | e.g. `#4CAF50` | Distinct from obstacles |
 | Spawn | Center of play area | On game start / restart |
 
-**Movement**: Velocity = normalized stick input × speed × deltaTime. Position clamped to play area with padding.
+**Movement**: Velocity = normalized stick input × speed × deltaTime. Position clamped to play area; padding = player radius (20 px) on all edges to prevent clipping.
 
 ### 5.4 Obstacles
 
 | Property | Value | Notes |
 |----------|-------|-------|
-| Shape | Rectangle (AABB) or Circle | Rectangles for v1 |
+| Shape | Rectangle (AABB) | v1: AABB only; circle obstacles deferred to later |
 | Sizes | Small, medium, large | e.g. 30×30, 50×50, 70×70 |
 | Spawn | Random edge (top/right/bottom/left) | Outside visible area |
 | Direction | Toward center or slight random offset | Create variety |
@@ -162,6 +163,7 @@ ps_5/
 | Color | e.g. `#E53935` | Contrast with player |
 
 **Spawn Logic**:
+- Spawn point: Random edge (top/right/bottom/left), offset 1–2 obstacle widths outside visible play area.
 - Spawn interval: Start ~1.5s; decrease over time (min ~0.5s).
 - Per spawn: 1 obstacle; random type/size.
 - Max on screen: 15–20 (tune for performance and feel).
@@ -176,8 +178,8 @@ ps_5/
 
 ### 6.1 Detection Method
 - **Player**: Circle, center `(px, py)`, radius `r`.
-- **Obstacle**: Axis-Aligned Bounding Box (AABB) or circle.
-- **Algorithm**: Circle–AABB or circle–circle distance check.
+- **Obstacle**: Axis-Aligned Bounding Box (AABB) only in v1.
+- **Algorithm**: Circle–AABB distance check (circle obstacles deferred).
 
 ### 6.2 Circle–AABB (Player vs Rect Obstacle)
 1. Find closest point on rectangle to circle center.
@@ -194,10 +196,12 @@ ps_5/
 | Event | Points |
 |-------|--------|
 | Survival (per second) | 10 |
-| Obstacle passed (left screen without hit) | 25 |
+| Obstacle cleared (exited play area without hitting player) | 25 |
 | (Optional) Near-miss bonus | 0 (v1) |
 
-**Displayed**: Current score, high score (persisted in `localStorage`).
+**Obstacle cleared rule**: Awarded when an obstacle’s bounding box is fully outside the play area (any edge) without having collided with the player. Implement by checking obstacle bounds against canvas edges; when fully past, remove from active list and add +25 points.
+
+**Displayed**: Current score, high score (persisted in `localStorage` under key `dodgeRunHighScore`).
 
 ---
 
@@ -309,16 +313,16 @@ ps_5/
 - **Collision** — Circle–AABB and response (game over) are described.
 - **Phased plan** — Implementation phases with checkboxes make the doc directly usable for development.
 
-### Gaps & Ambiguities
-1. **GAME_OVER → PLAYING** — The table says “Any button → MENU → (then start) → PLAYING.” The diagram doesn’t show GAME_OVER → MENU. Either add GAME_OVER → MENU in the diagram, or allow “restart” to go GAME_OVER → PLAYING directly and document that.
-2. **“Obstacle passed” scoring** — “Obstacle passed (left screen without hit)” needs a clear rule: when does an obstacle “pass”? Define it (e.g. “obstacle center or bounds fully past the opposite edge”) so implementation is unambiguous.
-3. **Pause trigger** — Options (button 9) is specified for pause; the state table says “Resume (same as pause).” Consider adding a one-line note in §4.1 (e.g. “Options: toggle pause”) so diagram, table, and input spec align.
-4. **Circle obstacles** — §5.4 and §6 mention rectangles for v1 and circles as an option; §6.2 only describes Circle–AABB. If v1 is rect-only, consider stating “v1: obstacles are AABB only; circle obstacles deferred” to avoid confusion.
+### Gaps & Ambiguities (resolved)
+1. **GAME_OVER → PLAYING** ✓ — Resolved: restart now goes GAME_OVER → PLAYING directly (arcade style).
+2. **"Obstacle passed" scoring** ✓ — Resolved: §7 now defines "obstacle cleared" as bounds fully outside play area, with implementation note.
+3. **Pause trigger** ✓ — Resolved: §4.1 and §3.2 now specify Options as toggle for pause/resume.
+4. **Circle obstacles** ✓ — Resolved: §5.4 and §6 now state v1 is AABB-only; circle obstacles deferred.
 
-### Minor Suggestions
-- **High score key** — Specify the `localStorage` key (e.g. `dodgeRunHighScore`) so it’s consistent across `ui.js` and any future code.
-- **Player bounds** — “Position clamped to play area with padding” could specify a number (e.g. “padding = player radius” or “10px”) so clamping is reproducible.
-- **Doc date** — Footer says “2025-02-12”; update to 2026-02-12 if tracking by calendar year.
+### Minor Suggestions (resolved)
+- **High score key** ✓ — Resolved: §7 now specifies `dodgeRunHighScore`.
+- **Player bounds** ✓ — Resolved: §5.3 now specifies padding = player radius (20 px).
+- **Doc date** ✓ — Resolved: footer updated to 2026-02-12.
 
 ### Consistency Check
 - State names and transitions in §3 match §2.2 and the phase checklist.
@@ -327,5 +331,5 @@ ps_5/
 
 ---
 
-*Document Version: 1.0*  
-*Last Updated: 2025-02-12*
+*Document Version: 1.1*  
+*Last Updated: 2026-02-12*
