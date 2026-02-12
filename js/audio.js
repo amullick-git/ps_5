@@ -43,6 +43,12 @@ export function playPass() {
   playTone(554, 0.08, 'sine', 0.1);
 }
 
+export function playCollect() {
+  if (!ctx) return;
+  playTone(880, 0.06, 'sine', 0.2);
+  setTimeout(() => playTone(1100, 0.08, 'sine', 0.15), 40);
+}
+
 export function playNearMiss() {
   if (!ctx) return;
   const osc = ctx.createOscillator();

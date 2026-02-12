@@ -21,6 +21,9 @@ const playerMaterial = new THREE.MeshStandardMaterial({ color: 0x4CAF50 });
 const obstacleMaterial = new THREE.MeshStandardMaterial({ color: 0xE53935 });
 const particleGeometry = new THREE.SphereGeometry(0.05, 12, 12);
 const particleMaterial = new THREE.MeshBasicMaterial({ color: 0xE53935, transparent: true });
+// Octahedron (diamond) — distinct from player sphere and obstacle boxes
+const collectibleGeometry = new THREE.OctahedronGeometry(0.22, 0);
+const collectibleMaterial = new THREE.MeshStandardMaterial({ color: 0xFFD700, emissive: 0x886600 });
 
 export function init(canvas, width, height) {
   if (scene) return;
@@ -64,13 +67,26 @@ export function renderBackground() {
   renderer.render(scene, camera);
 }
 
-export function render(player, obstacles, particles, shakeX, shakeY, nearMissGlow, hideObstacles = false) {
+export function render(player, obstacles, collectibles, particles, shakeX, shakeY, nearMissGlow, hideObstacles = false) {
   if (!scene || !camera || !renderer) return;
 
   const [px, pz] = to3D(player.x, player.y);
   playerMesh.position.set(px, 0.2, pz);
   playerMesh.visible = true;
   playerMesh.material.emissive = new THREE.Color(0xFFEB3B).multiplyScalar(nearMissGlow * 0.5);
+
+  const t = Date.now() * 0.002;
+  for (const c of collectibles || []) {
+    if (!c.mesh) {
+      c.mesh = new THREE.Mesh(collectibleGeometry.clone(), collectibleMaterial.clone());
+      scene.add(c.mesh);
+    }
+    const [cx, cz] = to3D(c.x, c.y);
+    const bob = Math.sin(t) * 0.05;
+    c.mesh.position.set(cx, 0.15 + bob, cz);
+    c.mesh.rotation.y = t;
+    c.mesh.visible = true;
+  }
 
   for (const o of obstacles) {
     if (!o.mesh) {
@@ -119,6 +135,15 @@ export function onObstacleRemoved(obstacle) {
     obstacle.mesh.material.dispose();
     obstacleMeshes.delete(obstacle.mesh);
     obstacle.mesh = null;
+  }
+}
+
+export function onCollectibleRemoved(collectible) {
+  if (collectible.mesh) {
+    scene.remove(collectible.mesh);
+    collectible.mesh.geometry.dispose();
+    collectible.mesh.material.dispose();
+    collectible.mesh = null;
   }
 }
 

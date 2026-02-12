@@ -21,6 +21,23 @@ export function checkPlayerObstacles(player, obstacles) {
   return false;
 }
 
+export function circleCircle(px, py, pr, cx, cy, cr) {
+  const dx = px - cx;
+  const dy = py - cy;
+  const distSq = dx * dx + dy * dy;
+  return distSq <= (pr + cr) * (pr + cr);
+}
+
+export function checkPlayerCollectibles(player, collectibles) {
+  const collected = [];
+  for (const c of collectibles) {
+    if (circleCircle(player.x, player.y, player.radius, c.x, c.y, c.radius)) {
+      collected.push(c);
+    }
+  }
+  return collected;
+}
+
 /** Distance from player center to closest point on obstacle. For near-miss detection. */
 export function closestObstacleDistance(player, obstacles) {
   let minDist = Infinity;

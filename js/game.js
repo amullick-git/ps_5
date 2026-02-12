@@ -4,8 +4,9 @@
 
 import { getMovement } from './controller.js';
 import { updatePlayer } from './player.js';
-import { checkPlayerObstacles, closestObstacleDistance } from './collision.js';
+import { checkPlayerObstacles, checkPlayerCollectibles, closestObstacleDistance } from './collision.js';
 import { createParticleBurst, updateParticles } from './particles.js';
+import { createCollectibleSpawner } from './collectible.js';
 import * as audio from './audio.js';
 import * as renderer3d from './renderer3d.js';
 
@@ -21,6 +22,8 @@ export function createGame(canvas, player, obstacleSpawner, onGameOver, onScoreU
   renderer3d.init(canvas, width, height);
   renderer3d.reset();
   obstacleSpawner.reset((o) => renderer3d.onObstacleRemoved(o));
+  const collectibleSpawner = createCollectibleSpawner(width, height);
+  collectibleSpawner.reset((c) => renderer3d.onCollectibleRemoved?.(c));
 
   let survivalAccum = 0;
   let countdownTimer = 3.5;
@@ -49,6 +52,7 @@ export function createGame(canvas, player, obstacleSpawner, onGameOver, onScoreU
       if (countdownPhase === 0 && prev === 1) {
         audio.playGo();
         audio.startBGM();
+        collectibleSpawner.primeFirstSpawn?.();
       }
       return { countdownPhase, countdownTimer };
     }
@@ -66,6 +70,16 @@ export function createGame(canvas, player, obstacleSpawner, onGameOver, onScoreU
     const movement = getMovement();
     updatePlayer(player, movement, dt, width, height);
     obstacleSpawner.update(dt);
+    collectibleSpawner.update(dt, (c) => renderer3d.onCollectibleRemoved?.(c));
+
+    const collected = checkPlayerCollectibles(player, collectibleSpawner.collectibles);
+    for (const c of collected) {
+      audio.playCollect();
+      onScoreUpdate?.(c.points);
+      renderer3d.onCollectibleRemoved?.(c);
+      const idx = collectibleSpawner.collectibles.indexOf(c);
+      if (idx >= 0) collectibleSpawner.collectibles.splice(idx, 1);
+    }
 
     const cleared = obstacleSpawner.removeOutside(width, height, onObstacleRemoved);
     if (cleared > 0) {
@@ -111,6 +125,7 @@ export function createGame(canvas, player, obstacleSpawner, onGameOver, onScoreU
     renderer3d.render(
       player,
       obstacleSpawner.obstacles,
+      collectibleSpawner.collectibles,
       particles,
       shakeX,
       shakeY,
