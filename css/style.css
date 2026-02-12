@@ -134,6 +134,13 @@ body {
   gap: 0.5rem 1rem;
 }
 
+#hud-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.15rem;
+}
+
 #level-display {
   color: #FFD700;
   font-size: 1.1rem;

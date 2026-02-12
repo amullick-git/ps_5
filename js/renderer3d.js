@@ -78,9 +78,14 @@ export function render(player, obstacles, collectibles, particles, shakeX, shake
   const [px, pz] = to3D(player.x, player.y);
   playerMesh.position.set(px, 0.2, pz);
   playerMesh.visible = true;
-  const baseEmissive = new THREE.Color(0x22DD22).multiplyScalar(0.15);
-  const nearMissEmissive = new THREE.Color(0xFFEB3B).multiplyScalar(nearMissGlow * 0.2);
-  playerMesh.material.emissive.copy(baseEmissive).add(nearMissEmissive);
+  // Near-miss: lerp color green → yellow and boost emissive for visible feedback
+  const baseColor = new THREE.Color(0x5EFF5E);
+  const nearMissColor = new THREE.Color(0xFFEB3B);
+  playerMesh.material.color.copy(baseColor).lerp(nearMissColor, nearMissGlow);
+  const baseEmissive = new THREE.Color(0x22DD22);
+  const nearMissEmissive = new THREE.Color(0xFFEB3B);
+  playerMesh.material.emissive.copy(baseEmissive).lerp(nearMissEmissive, nearMissGlow);
+  playerMesh.material.emissiveIntensity = 0.15 + nearMissGlow * 0.3;
   const pulse = 1 + Math.sin(Date.now() * 0.003) * 0.03;
   playerMesh.scale.setScalar(pulse);
 
