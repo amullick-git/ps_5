@@ -51,6 +51,8 @@ ps_5/
 │   ├── player.js           # Player entity, movement, bounds
 │   ├── obstacle.js         # Obstacle spawner, types, movement
 │   ├── collision.js        # Collision detection (AABB)
+│   ├── particles.js        # Particle burst on game over
+│   ├── audio.js            # Web Audio: hit, pass, menu, BGM
 │   └── ui.js               # HUD, menus, score display
 ├── assets/                 # (Optional) sprites, sounds
 │   ├── sprites/
@@ -92,7 +94,7 @@ ps_5/
 | State | Description | User Actions |
 |-------|-------------|--------------|
 | **MENU** | Title, instructions, "Press any button to start" | Any gamepad button or key → PLAYING |
-| **PLAYING** | Active gameplay | Collision → GAME_OVER; Options button → PAUSED |
+| **PLAYING** | Active gameplay; starts with 3…2…1…Go! countdown (~3.5 s) | Collision → GAME_OVER; Options button → PAUSED |
 | **GAME_OVER** | Score, high score, "Press any button to restart" | Any button → PLAYING (direct restart) |
 | **PAUSED** | Overlay "Paused", dimmed game | Options button (toggle) → PLAYING |
 
@@ -218,17 +220,19 @@ ps_5/
 - System font stack: `'Segoe UI', system-ui, sans-serif`
 - Large title, readable score, clear "Press to start" text.
 
-### 8.3 Effects (v1)
+### 8.3 Effects
 - Simple filled shapes (no sprites).
-- Optional: subtle particle burst on game over (low priority).
+- Particle burst on game over (implemented).
+- Screen shake on hit (implemented).
+- Near-miss glow (cyan pulse when obstacle within ~55 px; implemented).
 
 ---
 
-## 9. Audio (Optional / Later)
+## 9. Audio
 
-- **BGM**: Low-key loop (optional).
-- **SFX**: Hit, pass, menu select (optional).
-- **Implementation**: Web Audio API or `<audio>`; muted by default, enable on first interaction.
+- **BGM**: Low-key sine loop (110 Hz) during gameplay.
+- **SFX**: Hit (thud on collision), pass (tone on obstacle cleared), menu select (click on start/restart).
+- **Implementation**: Web Audio API; procedural generation, no external files; init on first user interaction.
 
 ---
 
@@ -260,35 +264,40 @@ ps_5/
 ## 12. Implementation Phases
 
 ### Phase 1: Core Shell
-- [ ] HTML + canvas + CSS layout
-- [ ] Game loop with delta time
-- [ ] State machine (MENU, PLAYING, GAME_OVER)
+- [x] HTML + canvas + CSS layout
+- [x] Game loop with delta time
+- [x] State machine (MENU, PLAYING, GAME_OVER)
 
 ### Phase 2: Controller & Player
-- [ ] Controller module (polling, dead zone, normalization)
-- [ ] Player entity (movement, bounds)
-- [ ] Render player
+- [x] Controller module (polling, dead zone, normalization)
+- [x] Player entity (movement, bounds)
+- [x] Render player
 
 ### Phase 3: Obstacles
-- [ ] Obstacle spawner (edge spawn, direction)
-- [ ] Obstacle movement and rendering
-- [ ] Difficulty scaling
+- [x] Obstacle spawner (edge spawn, direction)
+- [x] Obstacle movement and rendering
+- [x] Difficulty scaling
 
 ### Phase 4: Collision & Game Over
-- [ ] Circle–AABB collision
-- [ ] Game over flow
-- [ ] Restart flow
+- [x] Circle–AABB collision
+- [x] Game over flow
+- [x] Restart flow
 
 ### Phase 5: Polish
-- [ ] Score and high score
-- [ ] UI (HUD, menus)
-- [ ] Pause
-- [ ] Keyboard fallback (optional)
+- [x] Score and high score
+- [x] UI (HUD, menus)
+- [x] Pause
+- [x] Keyboard fallback (optional)
 
-### Phase 6: Optional
-- [ ] Particle effects
-- [ ] Sound
-- [ ] Multiple obstacle shapes
+### Phase 6: Polish & Feedback (v1.1)
+- [x] **Web Audio** — Hit (low thud on collision), pass (tone on obstacle cleared), menu select (soft click on start/restart), BGM (low-key 110 Hz sine loop during gameplay). Procedural generation via Web Audio API; no external files.
+- [x] **Particle burst** — Brief explosion (~24 particles) emanating from player on game over; red particles with velocity and fade; ~0.5 s duration before game over screen.
+- [x] **Screen shake** — Canvas offset on hit; shake decays over ~0.5 s.
+- [x] **Near-miss glow** — Subtle cyan glow on player when obstacle is within ~55 px (no collision); intensity fades when obstacle moves away.
+- [x] **Countdown** — "3… 2… 1… Go!" overlay before obstacles spawn; ~3.5 s total; beeps for 3/2/1, fanfare for Go!; player can move during countdown; obstacles spawn only after "Go!".
+
+### Phase 7: Optional
+- [ ] Multiple obstacle shapes (circles)
 
 ---
 
@@ -331,5 +340,5 @@ ps_5/
 
 ---
 
-*Document Version: 1.1*  
+*Document Version: 1.2*  
 *Last Updated: 2026-02-12*

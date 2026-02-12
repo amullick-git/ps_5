@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dodge Run — PS5 Controller Game</title>
   <link rel="stylesheet" href="css/style.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+    }
+  }
+  </script>
 </head>
 <body>
   <div id="game-container">
@@ -30,6 +37,9 @@
       <div id="paused-overlay" class="hidden">
         <h2>Paused</h2>
         <p class="hint">Press Options to resume</p>
+      </div>
+      <div id="countdown-overlay" class="hidden">
+        <span id="countdown-text">3</span>
       </div>
     </div>
   </div>

@@ -20,3 +20,17 @@ export function checkPlayerObstacles(player, obstacles) {
   }
   return false;
 }
+
+/** Distance from player center to closest point on obstacle. For near-miss detection. */
+export function closestObstacleDistance(player, obstacles) {
+  let minDist = Infinity;
+  for (const o of obstacles) {
+    const cx = Math.max(o.x, Math.min(player.x, o.x + o.w));
+    const cy = Math.max(o.y, Math.min(player.y, o.y + o.h));
+    const dx = player.x - cx;
+    const dy = player.y - cy;
+    const d = Math.sqrt(dx * dx + dy * dy);
+    if (d < minDist) minDist = d;
+  }
+  return minDist;
+}

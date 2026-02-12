@@ -103,9 +103,8 @@ export function createObstacleSpawner(width, height) {
         o.y += o.vy * dt;
       }
     },
-    removeOutside(width, height) {
+    removeOutside(width, height, onRemove) {
       // Only remove when obstacle has exited in the direction it's moving
-      // (don't remove spawns that are still approaching from outside)
       let cleared = 0;
       for (let i = obstacles.length - 1; i >= 0; i--) {
         const o = obstacles[i];
@@ -114,13 +113,15 @@ export function createObstacleSpawner(width, height) {
         const exitedDown = o.vy > 0 && o.y > height;
         const exitedUp = o.vy < 0 && o.y + o.h < 0;
         if (exitedRight || exitedLeft || exitedDown || exitedUp) {
+          if (onRemove) onRemove(o);
           obstacles.splice(i, 1);
           cleared++;
         }
       }
       return cleared;
     },
-    reset() {
+    reset(onRemove) {
+      if (onRemove) obstacles.forEach(onRemove);
       obstacles.length = 0;
       spawnTimer = 0;
       gameTime = 0;

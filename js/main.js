@@ -2,20 +2,22 @@
  * Main entry — init, state machine, game loop.
  */
 
-import { initController, getMovement, getAnyButtonPressed, getPausePressed, clearButtonState } from './controller.js';
+import { initController, getAnyButtonPressed, getPausePressed, clearButtonState } from './controller.js';
 import { createPlayer, resetPlayer } from './player.js';
 import { createObstacleSpawner } from './obstacle.js';
 import { createGame } from './game.js';
 import * as ui from './ui.js';
+import * as audio from './audio.js';
+import * as renderer3d from './renderer3d.js';
 
 const canvas = document.getElementById('game-canvas');
-const ctx = canvas.getContext('2d');
 const WIDTH = 800;
 const HEIGHT = 600;
 
 function resizeCanvas() {
   canvas.width = WIDTH;
   canvas.height = HEIGHT;
+  renderer3d.resize?.(WIDTH, HEIGHT);
 }
 
 const player = createPlayer(WIDTH, HEIGHT);
@@ -33,10 +35,10 @@ function startPlaying() {
   state = 'PLAYING';
   score = 0;
   resetPlayer(player, WIDTH, HEIGHT);
-  obstacleSpawner.reset();
   highScore = ui.getHighScore();
   ui.showPlaying(score, highScore);
   gameInstance = createGame(canvas, player, obstacleSpawner, onGameOver, addScore);
+  // BGM starts after countdown (handled in game loop)
 }
 
 function addScore(points) {
@@ -51,6 +53,7 @@ function addScore(points) {
 
 function onGameOver() {
   state = 'GAME_OVER';
+  audio.stopBGM();
   ui.showGameOver(score, highScore);
 }
 
@@ -65,6 +68,7 @@ function loop(timestamp) {
     if (anyBtn || startGameOnNextFrame) {
       startGameOnNextFrame = false;
       clearButtonState();
+      audio.playMenuSelect();
       startPlaying();
     }
   } else if (state === 'PLAYING') {
@@ -82,6 +86,7 @@ function loop(timestamp) {
   } else if (state === 'GAME_OVER') {
     if (anyBtn) {
       clearButtonState();
+      audio.playMenuSelect();
       startPlaying();
     }
   }
@@ -91,9 +96,13 @@ function loop(timestamp) {
   // Always render (menu shows overlay; playing/paused show game)
   if (state === 'PLAYING' || state === 'PAUSED') {
     gameInstance.render();
+    if (gameInstance.getCountdownTimer?.() > 0) {
+      ui.showCountdown(gameInstance.getCountdownPhase(), gameInstance.getCountdownTimer());
+    } else {
+      ui.showCountdown(-1, 0);
+    }
   } else if (state === 'MENU' || state === 'GAME_OVER') {
-    ctx.fillStyle = '#1a1a2e';
-    ctx.fillRect(0, 0, WIDTH, HEIGHT);
+    renderer3d.renderBackground?.();
   }
 
   rafId = requestAnimationFrame(loop);
@@ -103,14 +112,17 @@ let lastTime = 0;
 
 function init() {
   resizeCanvas();
+  renderer3d.init(canvas, WIDTH, HEIGHT);
   window.addEventListener('resize', resizeCanvas);
   initController();
   ui.showMenu();
 
-  // Start loop on first user interaction (required for Gamepad API)
+  // Start loop on first user interaction (required for Gamepad API + Audio)
   const start = () => {
     document.removeEventListener('click', start);
     document.removeEventListener('keydown', start);
+    audio.initAudio();
+    audio.resumeAudio();
     lastTime = performance.now();
     startGameOnNextFrame = true;
     rafId = requestAnimationFrame(loop);

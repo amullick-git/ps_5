@@ -18,6 +18,7 @@ export function showMenu() {
   document.getElementById('hud').classList.add('hidden');
   document.getElementById('game-over-screen').classList.add('hidden');
   document.getElementById('paused-overlay').classList.add('hidden');
+  document.getElementById('countdown-overlay')?.classList.add('hidden');
 }
 
 export function showPlaying(score, highScore) {
@@ -33,6 +34,7 @@ export function showGameOver(score, highScore) {
   document.getElementById('hud').classList.add('hidden');
   document.getElementById('menu-screen').classList.add('hidden');
   document.getElementById('paused-overlay').classList.add('hidden');
+  document.getElementById('countdown-overlay')?.classList.add('hidden');
   document.getElementById('game-over-screen').classList.remove('hidden');
   document.getElementById('final-score').textContent = `Score: ${score}`;
   document.getElementById('final-high-score').textContent = `Best: ${highScore}`;
@@ -44,6 +46,15 @@ export function showPaused() {
 
 export function hidePaused() {
   document.getElementById('paused-overlay').classList.add('hidden');
+}
+
+export function showCountdown(phase, countdownTimer) {
+  const el = document.getElementById('countdown-overlay');
+  const text = document.getElementById('countdown-text');
+  if (!el || !text) return;
+  const labels = ['Go!', '1', '2', '3'];
+  text.textContent = labels[phase] ?? '';
+  el.classList.toggle('hidden', countdownTimer <= 0);
 }
 
 export function updateScore(score) {
