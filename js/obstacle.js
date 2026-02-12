@@ -1,6 +1,6 @@
 /**
  * Obstacle spawner — AABB rectangles, spawn from edges, move toward center.
- * Sizes: 30×30, 50×50, 70×70. Spawn interval 1.5s → 0.5s. Max 18 on screen.
+ * Sizes: 30×30, 50×50, 70×70. Spawn interval scales with level. Max obstacles 6 → 18 across levels.
  */
 
 const SIZES = [
@@ -16,8 +16,8 @@ const BASE_SPEED = 150;
 const MAX_SPEED = 400;
 const SPAWN_INTERVAL_START = 1.4;
 const SPAWN_INTERVAL_MIN = 0.8;
-const MAX_OBSTACLES = 18;
-const DIFFICULTY_INTERVAL = 30;
+const MIN_OBSTACLES = 6;   // Level 1 cap
+const MAX_OBSTACLES = 18;  // Cap at high levels
 
 
 export function createObstacleSpawner(width, height) {
@@ -38,10 +38,17 @@ export function createObstacleSpawner(width, height) {
     return BASE_SPEED + (MAX_SPEED - BASE_SPEED) * t;
   }
 
+  function getMaxObstacles(currentLevel = 1) {
+    const l = Math.max(0, currentLevel - 1);
+    const t = Math.min(l * 0.07, 1); // Ramp over ~15 levels
+    return Math.round(MIN_OBSTACLES + (MAX_OBSTACLES - MIN_OBSTACLES) * t);
+  }
+
   let currentLevel = 1;
 
   function spawn() {
-    if (obstacles.length >= MAX_OBSTACLES) return;
+    const cap = getMaxObstacles(currentLevel);
+    if (obstacles.length >= cap) return;
 
     const size = SIZES[Math.floor(Math.random() * SIZES.length)];
     const speed = getSpeed(currentLevel);
