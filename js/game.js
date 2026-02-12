@@ -109,7 +109,7 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
     const closest = closestObstacleDistance(player, obstacleSpawner.obstacles);
     const isNearMiss = closest < NEAR_MISS_DIST && closest > player.radius;
     if (isNearMiss) {
-      nearMissGlow = Math.min(1, nearMissGlow + dt * 4);
+      nearMissGlow = Math.min(1, nearMissGlow + dt * 10);
       if (!wasNearMiss && nearMissCooldown <= 0) {
         audio.playNearMiss();
         triggerHaptic('nearMiss');
@@ -117,7 +117,7 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
       }
       wasNearMiss = true;
     } else {
-      nearMissGlow = Math.max(0, nearMissGlow - dt * 3);
+      nearMissGlow = Math.max(0, nearMissGlow - dt * 2);
       wasNearMiss = false;
     }
     if (nearMissCooldown > 0) nearMissCooldown -= dt;
