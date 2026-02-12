@@ -35,8 +35,8 @@ export function init(canvas, width, height) {
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x1a1a2e);
 
-  camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 100);
-  camera.position.set(0, 6, 5);
+  camera = new THREE.PerspectiveCamera(55, width / height, 0.1, 100);
+  camera.position.set(0, 4, 3.5);
   camera.lookAt(0, 0, 0);
 
   const ground = new THREE.Mesh(
@@ -149,7 +149,7 @@ export function render(player, obstacles, collectibles, particles, shakeX, shake
 
   const shakeOffX = (Math.random() - 0.5) * Math.abs(shakeX) / 30;
   const shakeOffZ = (Math.random() - 0.5) * Math.abs(shakeY) / 30;
-  camera.position.set(shakeOffX, 6, 5 + shakeOffZ);
+  camera.position.set(shakeOffX, 4, 3.5 + shakeOffZ);
   camera.lookAt(shakeOffX, 0, shakeOffZ);
 
   renderer.render(scene, camera);
