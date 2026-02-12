@@ -4,7 +4,8 @@
  */
 
 const RADIUS = 18;
-const SPAWN_INTERVAL = 1.2;
+const SPAWN_INTERVAL_BASE = 1.2;
+const SPAWN_INTERVAL_MIN = 0.7;
 const MIN_LIFETIME = 6;
 const MAX_LIFETIME = 12;
 const MAX_ON_SCREEN = 6;
@@ -18,6 +19,11 @@ const FLOAT_RADIUS = 25;
 export function createCollectibleSpawner(width, height) {
   let spawnTimer = 0;
   const collectibles = [];
+
+  function getSpawnInterval(currentLevel) {
+    const t = Math.min((currentLevel - 1) * 0.08, 1);
+    return SPAWN_INTERVAL_BASE - (SPAWN_INTERVAL_BASE - SPAWN_INTERVAL_MIN) * t;
+  }
 
   function randomSafePosition() {
     const pad = 60;
@@ -57,12 +63,13 @@ export function createCollectibleSpawner(width, height) {
   return {
     collectibles,
     primeFirstSpawn() {
-      spawnTimer = SPAWN_INTERVAL;
+      spawnTimer = getSpawnInterval(1);
       spawn(); // Spawn immediately on "Go!"
     },
-    update(dt, onExpire) {
+    update(dt, onExpire, level = 1) {
       spawnTimer += dt;
-      if (spawnTimer >= SPAWN_INTERVAL) {
+      const interval = getSpawnInterval(level);
+      if (spawnTimer >= interval) {
         spawnTimer = 0;
         spawn();
       }

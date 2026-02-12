@@ -14,8 +14,9 @@ const SURVIVAL_POINTS_PER_SEC = 10;
 const OBSTACLE_CLEARED_POINTS = 25;
 const NEAR_MISS_DIST = 55;
 const SHAKE_DECAY = 8;
+const LEVEL_DURATION = 20; // Seconds per level
 
-export function createGame(canvas, width, height, player, obstacleSpawner, onGameOver, onScoreUpdate) {
+export function createGame(canvas, width, height, player, obstacleSpawner, onGameOver, onScoreUpdate, onLevelUp) {
   width = width ?? canvas?.width ?? 800;
   height = height ?? canvas?.height ?? 600;
 
@@ -34,6 +35,8 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
   let nearMissGlow = 0;
   let wasNearMiss = false;
   let nearMissCooldown = 0;
+  let level = 1;
+  let levelUpAnimTimer = 0;
 
   const onObstacleRemoved = (o) => renderer3d.onObstacleRemoved(o);
 
@@ -69,8 +72,20 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
 
     const movement = getMovement();
     updatePlayer(player, movement, dt, width, height);
-    obstacleSpawner.update(dt);
-    collectibleSpawner.update(dt, (c) => renderer3d.onCollectibleRemoved?.(c));
+    obstacleSpawner.update(dt, level);
+
+    // Level progression: level up every LEVEL_DURATION seconds
+    const gameTime = obstacleSpawner.getGameTime?.() ?? 0;
+    const newLevel = 1 + Math.floor(gameTime / LEVEL_DURATION);
+    if (newLevel > level) {
+      level = newLevel;
+      levelUpAnimTimer = 1.2;
+      audio.playLevelUp?.();
+      onLevelUp?.(level);
+    }
+    if (levelUpAnimTimer > 0) levelUpAnimTimer -= dt;
+
+    collectibleSpawner.update(dt, (c) => renderer3d.onCollectibleRemoved?.(c), level);
 
     const collected = checkPlayerCollectibles(player, collectibleSpawner.collectibles);
     for (const c of collected) {
@@ -139,5 +154,7 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
     render,
     getCountdownPhase: () => countdownPhase,
     getCountdownTimer: () => countdownTimer,
+    getLevel: () => level,
+    getLevelUpAnimTimer: () => levelUpAnimTimer,
   };
 }

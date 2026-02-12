@@ -26,23 +26,25 @@ export function createObstacleSpawner(width, height) {
   let gameTime = 0;
   const obstacles = [];
 
-  function getSpawnInterval() {
-    const level = Math.floor(gameTime / DIFFICULTY_INTERVAL);
-    const t = Math.min(level * 0.1, 1);
+  function getSpawnInterval(currentLevel = 1) {
+    const l = Math.max(0, currentLevel - 1);
+    const t = Math.min(l * 0.12, 1);
     return SPAWN_INTERVAL_START - (SPAWN_INTERVAL_START - SPAWN_INTERVAL_MIN) * t;
   }
 
-  function getSpeed() {
-    const level = Math.floor(gameTime / DIFFICULTY_INTERVAL);
-    const t = Math.min(level * 0.15, 1);
+  function getSpeed(currentLevel = 1) {
+    const l = Math.max(0, currentLevel - 1);
+    const t = Math.min(l * 0.1, 1);
     return BASE_SPEED + (MAX_SPEED - BASE_SPEED) * t;
   }
+
+  let currentLevel = 1;
 
   function spawn() {
     if (obstacles.length >= MAX_OBSTACLES) return;
 
     const size = SIZES[Math.floor(Math.random() * SIZES.length)];
-    const speed = getSpeed();
+    const speed = getSpeed(currentLevel);
     const centerX = width / 2;
     const centerY = height / 2;
 
@@ -91,9 +93,11 @@ export function createObstacleSpawner(width, height) {
 
   return {
     obstacles,
-    update(dt) {
+    getGameTime: () => gameTime,
+    update(dt, level = 1) {
       gameTime += dt;
-      lastSpawnInterval = getSpawnInterval();
+      currentLevel = level;
+      lastSpawnInterval = getSpawnInterval(level);
       spawnTimer += dt;
 
       if (spawnTimer >= lastSpawnInterval) {
@@ -129,6 +133,7 @@ export function createObstacleSpawner(width, height) {
       obstacles.length = 0;
       spawnTimer = 0;
       gameTime = 0;
+      currentLevel = 1;
     },
     render(ctx) {
       for (const o of obstacles) {

@@ -38,7 +38,7 @@ function startPlaying() {
   resetPlayer(player, WIDTH, HEIGHT);
   highScore = ui.getHighScore();
   ui.showPlaying(score, highScore);
-  gameInstance = createGame(canvas, WIDTH, HEIGHT, player, obstacleSpawner, onGameOver, addScore);
+  gameInstance = createGame(canvas, WIDTH, HEIGHT, player, obstacleSpawner, onGameOver, addScore, onLevelUp);
   // BGM starts after countdown (handled in game loop)
 }
 
@@ -56,6 +56,11 @@ function onGameOver() {
   state = 'GAME_OVER';
   audio.stopBGM();
   ui.showGameOver(score, highScore);
+}
+
+function onLevelUp(level) {
+  ui.updateLevel(level);
+  ui.showLevelUp(level);
 }
 
 function loop(timestamp) {
@@ -97,6 +102,7 @@ function loop(timestamp) {
   // Always render (menu shows overlay; playing/paused show game)
   if (state === 'PLAYING' || state === 'PAUSED') {
     gameInstance.render();
+    ui.updateLevel(gameInstance.getLevel?.() ?? 1);
     if (gameInstance.getCountdownTimer?.() > 0) {
       ui.showCountdown(gameInstance.getCountdownPhase(), gameInstance.getCountdownTimer());
     } else {

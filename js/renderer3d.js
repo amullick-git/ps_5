@@ -16,6 +16,7 @@ function to3D(x, y) {
 let scene, camera, renderer;
 let playerMesh, particleMeshes = [];
 let obstacleMeshes = new Set();
+let collectibleMeshes = new Set();
 const playerGeometry = new THREE.SphereGeometry(0.2, 32, 32);
 const playerMaterial = new THREE.MeshStandardMaterial({ color: 0x4CAF50 });
 const particleGeometry = new THREE.SphereGeometry(0.05, 12, 12);
@@ -81,6 +82,7 @@ export function render(player, obstacles, collectibles, particles, shakeX, shake
       const mat = new THREE.MeshStandardMaterial({ color, emissive });
       c.mesh = new THREE.Mesh(collectibleGeometry.clone(), mat);
       scene.add(c.mesh);
+      collectibleMeshes.add(c.mesh);
     }
     const [cx, cz] = to3D(c.x, c.y);
     const bob = Math.sin(t) * 0.05;
@@ -147,12 +149,21 @@ export function onCollectibleRemoved(collectible) {
     scene.remove(collectible.mesh);
     collectible.mesh.geometry.dispose();
     collectible.mesh.material.dispose();
+    collectibleMeshes.delete(collectible.mesh);
     collectible.mesh = null;
   }
 }
 
 export function reset() {
   obstacleMeshes.clear();
+  collectibleMeshes.forEach(m => {
+    if (m && m.parent) {
+      scene.remove(m);
+      m.geometry?.dispose();
+      m.material?.dispose();
+    }
+  });
+  collectibleMeshes.clear();
   particleMeshes.forEach(m => {
     if (m && m.parent) {
       scene.remove(m);

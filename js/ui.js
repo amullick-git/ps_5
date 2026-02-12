@@ -13,12 +13,31 @@ export function setHighScore(score) {
   localStorage.setItem(HIGH_SCORE_KEY, String(score));
 }
 
+export function showLevelUp(level) {
+  const el = document.getElementById('level-up-overlay');
+  const text = document.getElementById('level-up-text');
+  if (!el || !text) return;
+  text.textContent = `Level ${level}!`;
+  el.classList.remove('hidden');
+  el.classList.add('level-up-visible');
+  setTimeout(() => {
+    el.classList.add('hidden');
+    el.classList.remove('level-up-visible');
+  }, 1200);
+}
+
+export function hideLevelUp() {
+  const el = document.getElementById('level-up-overlay');
+  if (el) el.classList.add('hidden');
+}
+
 export function showMenu() {
   document.getElementById('menu-screen').classList.remove('hidden');
   document.getElementById('hud').classList.add('hidden');
   document.getElementById('game-over-screen').classList.add('hidden');
   document.getElementById('paused-overlay').classList.add('hidden');
   document.getElementById('countdown-overlay')?.classList.add('hidden');
+  document.getElementById('level-up-overlay')?.classList.add('hidden');
 }
 
 export function showPlaying(score, highScore) {
@@ -35,6 +54,7 @@ export function showGameOver(score, highScore) {
   document.getElementById('menu-screen').classList.add('hidden');
   document.getElementById('paused-overlay').classList.add('hidden');
   document.getElementById('countdown-overlay')?.classList.add('hidden');
+  document.getElementById('level-up-overlay')?.classList.add('hidden');
   document.getElementById('game-over-screen').classList.remove('hidden');
   document.getElementById('final-score').textContent = `Score: ${score}`;
   document.getElementById('final-high-score').textContent = `Best: ${highScore}`;
@@ -60,6 +80,11 @@ export function showCountdown(phase, countdownTimer) {
 export function updateScore(score) {
   const el = document.getElementById('score-display');
   if (el) el.textContent = `Score: ${score}`;
+}
+
+export function updateLevel(level) {
+  const el = document.getElementById('level-display');
+  if (el) el.textContent = `Level ${level}`;
 }
 
 export function updateHighScore(highScore) {

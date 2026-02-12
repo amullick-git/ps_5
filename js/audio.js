@@ -74,6 +74,13 @@ export function playCountdownBeep() {
   playTone(523, 0.12, 'sine', 0.35);
 }
 
+export function playLevelUp() {
+  if (!ctx) return;
+  playTone(523, 0.08, 'sine', 0.25);
+  setTimeout(() => playTone(659, 0.08, 'sine', 0.2), 80);
+  setTimeout(() => playTone(784, 0.12, 'sine', 0.3), 160);
+}
+
 export function playGo() {
   if (!ctx) return;
   playTone(523, 0.06, 'sine', 0.3);

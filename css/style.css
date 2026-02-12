@@ -105,6 +105,12 @@ body {
   align-items: flex-start;
 }
 
+#level-display {
+  color: #FFD700;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
 #score-display,
 #high-score-display {
   color: #EEEEEE;
@@ -172,6 +178,37 @@ body {
 @keyframes countdown-pop {
   0% { transform: scale(0.5); opacity: 0; }
   70% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+#level-up-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  pointer-events: none;
+}
+
+#level-up-text {
+  font-size: 4rem;
+  font-weight: 700;
+  color: #FFD700;
+  text-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+  animation: level-up-pop 0.4s ease-out;
+}
+
+.level-up-visible #level-up-text {
+  animation: level-up-pop 0.4s ease-out;
+}
+
+@keyframes level-up-pop {
+  0% { transform: scale(0.3); opacity: 0; }
+  50% { transform: scale(1.15); opacity: 1; }
   100% { transform: scale(1); opacity: 1; }
 }
 
