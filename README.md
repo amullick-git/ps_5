@@ -21,6 +21,17 @@ npx serve .
 
 Then open **http://localhost:8000** in your browser.
 
+## GitHub Pages
+
+To host the game on GitHub Pages:
+
+1. Go to your repo on GitHub → **Settings** → **Pages**
+2. Under "Build and deployment", select **Deploy from a branch**
+3. Branch: **main**, Folder: **/ (root)**
+4. Click **Save**
+
+The site will be at `https://<username>.github.io/ps_5/` (or your repo name).
+
 > **Note:** The Gamepad API requires user interaction before it activates. Click or press any key on the page first, then use your controller.
 
 ## Haptic Feedback
