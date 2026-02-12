@@ -10,7 +10,7 @@ const CENTER_X = 400;
 const CENTER_Y = 300;
 
 function to3D(x, y) {
-  return [(x - CENTER_X) / SCALE, -(y - CENTER_Y) / SCALE];
+  return [(x - CENTER_X) / SCALE, (y - CENTER_Y) / SCALE];
 }
 
 let scene, camera, renderer;
