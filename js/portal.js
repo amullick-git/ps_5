@@ -1,11 +1,11 @@
 /**
- * Bonus portals — enter for 8s collectibles-only bonus room.
+ * Bonus portals — enter for 15s collectibles-only bonus room.
  * Spawn occasionally; one on screen at a time; disappear after lifetime if not entered.
  */
 
-const RADIUS = 38;
-const SPAWN_INTERVAL = 28;
-const LIFETIME = 14;
+const RADIUS = 14;
+const SPAWN_INTERVAL = 100;
+const LIFETIME = 3;
 const COLOR = 0x9C27B0;
 
 export function createPortalSpawner(width, height) {

@@ -238,10 +238,10 @@ export function render(player, obstacles, collectibles, particles, shakeX, shake
       const baseColor = port.color ?? 0x9C27B0;
       const crystals = new THREE.Group();
       const count = 4;
-      const radius = 0.32;
+      const radius = 0.12;
       const colors = [0x9C27B0, 0xAB47BC, 0xBA68C8, 0xE040FB];
       for (let i = 0; i < count; i++) {
-        const geo = new THREE.OctahedronGeometry(0.12, 0);
+        const geo = new THREE.OctahedronGeometry(0.05, 0);
         const mat = new THREE.MeshStandardMaterial({
           color: colors[i] ?? baseColor,
           emissive: colors[i] ?? baseColor,

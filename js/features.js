@@ -41,7 +41,7 @@ export const FEATURE_UNLOCK_LEVEL = {
   // Level 9
   [FEATURES.SUDDEN_HARD_OBSTACLES]: 9,  // 6% chance for large bouncing obstacles (80×80)
   // Level 10
-  [FEATURES.BONUS_PORTAL]: 1,           // Portals: enter for 8s collectibles-only bonus room
+  [FEATURES.BONUS_PORTAL]: 1,           // Portals: enter for 15s collectibles-only bonus room
 };
 
 export function isFeatureEnabled(feature, level) {

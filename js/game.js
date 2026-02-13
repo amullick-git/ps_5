@@ -26,7 +26,7 @@ const STARTING_LIVES = 3;
 const INVINCIBILITY_DURATION = 2;
 const BOSS_WAVE_DURATION = 6;
 const BOSS_WAVE_SPEED_MULT = 2;
-const PORTAL_BONUS_DURATION = 8;
+const PORTAL_BONUS_DURATION = 15;
 const PORTAL_COLLECTIBLE_SPAWN_INTERVAL = 0.45;
 const PORTAL_COLLECTIBLE_MAX = 12;
 
@@ -106,7 +106,7 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
 
     const movement = getMovement();
 
-    // Portal bonus mode — collectibles only for 8s, obstacles block (no damage)
+    // Portal bonus mode — collectibles only for 15s, obstacles block (no damage)
     if (portalMode) {
       const prevX = player.x;
       const prevY = player.y;
@@ -196,7 +196,7 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
       portalCollectibleSpawnTimer = 0;
     }
 
-    portalSpawner.update(dt, (p) => renderer3d.onPortalRemoved?.(p), null, bonusPortalEnabled && !portalMode);
+    portalSpawner.update(dt, (p) => renderer3d.onPortalRemoved?.(p), null, bonusPortalEnabled && !portalMode && bossWaveTimer <= 0);
 
     const baseSpeedMult = slowmoTimer > 0 ? 0.5 : (bossWaveTimer > 0 ? BOSS_WAVE_SPEED_MULT : 1);
     if (slowmoTimer > 0) slowmoTimer -= dt;
@@ -214,7 +214,9 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
     if (newLevel > level) {
       level = newLevel;
       levelUpAnimTimer = 1.2;
-      if (isFeatureEnabled(FEATURES.BOSS_WAVE, level) && level % 3 === 0) bossWaveTimer = BOSS_WAVE_DURATION;
+      if (isFeatureEnabled(FEATURES.BOSS_WAVE, level) && level % 3 === 0 && portalSpawner.portals.length === 0 && !portalMode) {
+        bossWaveTimer = BOSS_WAVE_DURATION;
+      }
       audio.playLevelUp?.();
       triggerHaptic('levelUp');
       onLevelUp?.(level);
