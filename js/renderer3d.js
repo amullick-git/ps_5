@@ -93,13 +93,21 @@ export function renderBackground() {
 }
 
 const NORMAL_BG = 0x1a1a2e;
-const BOSS_BG = 0x2a1414;
+const BOSS_BG_DARK = 0x2a1414;
+const BOSS_BG_LIGHT = 0x3a1e1e;
 
 export function render(player, obstacles, collectibles, particles, shakeX, shakeY, nearMissGlow, hideObstacles = false, invincibleBlink = false, powerups = [], hasShield = false, bossWaveActive = false) {
   if (!scene || !camera || !renderer) return;
 
-  if (scene.background) scene.background.setHex(bossWaveActive ? BOSS_BG : NORMAL_BG);
-  if (groundMesh?.material?.color) groundMesh.material.color.setHex(bossWaveActive ? BOSS_BG : NORMAL_BG);
+  if (bossWaveActive) {
+    const t = (Math.sin(Date.now() * 0.004) + 1) / 2; // 0..1 pulse
+    const bossColor = new THREE.Color(BOSS_BG_DARK).lerp(new THREE.Color(BOSS_BG_LIGHT), t);
+    if (scene.background) scene.background.copy(bossColor);
+    if (groundMesh?.material?.color) groundMesh.material.color.copy(bossColor);
+  } else {
+    if (scene.background) scene.background.setHex(NORMAL_BG);
+    if (groundMesh?.material?.color) groundMesh.material.color.setHex(NORMAL_BG);
+  }
 
   const [px, pz] = to3D(player.x, player.y);
   playerMesh.position.set(px, 0.2, pz);
@@ -241,8 +249,13 @@ export function render(player, obstacles, collectibles, particles, shakeX, shake
     particleMeshes[i].visible = true;
   });
 
-  const shakeOffX = (Math.random() - 0.5) * Math.abs(shakeX) / 30;
-  const shakeOffZ = (Math.random() - 0.5) * Math.abs(shakeY) / 30;
+  let shakeOffX = (Math.random() - 0.5) * Math.abs(shakeX) / 30;
+  let shakeOffZ = (Math.random() - 0.5) * Math.abs(shakeY) / 30;
+  if (bossWaveActive) {
+    const bossShake = 0.05;
+    shakeOffX += (Math.random() - 0.5) * 2 * bossShake;
+    shakeOffZ += (Math.random() - 0.5) * 2 * bossShake;
+  }
   camera.position.set(shakeOffX, 4, 3.5 + shakeOffZ);
   camera.lookAt(shakeOffX, 0, shakeOffZ);
 
