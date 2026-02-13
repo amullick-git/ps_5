@@ -34,6 +34,9 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
   obstacleSpawner.reset((o) => renderer3d.onObstacleRemoved(o));
   const collectibleSpawner = createCollectibleSpawner(width, height);
   collectibleSpawner.reset((c) => renderer3d.onCollectibleRemoved?.(c));
+  obstacleSpawner.setOnSpawn?.((o) => {
+    if (Math.random() < 0.08) collectibleSpawner.spawnInFrontOfObstacle?.(o);
+  });
   const powerupSpawner = createPowerupSpawner(width, height);
   powerupSpawner.reset((p) => renderer3d.onPowerupRemoved?.(p));
 
@@ -135,7 +138,7 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
     if (invincibilityTimer > 0) invincibilityTimer -= dt;
 
     const magnetTarget = magnetTimer > 0 ? { x: player.x, y: player.y } : null;
-    collectibleSpawner.update(dt, (c) => renderer3d.onCollectibleRemoved?.(c), level, magnetTarget);
+    collectibleSpawner.update(dt, (c) => renderer3d.onCollectibleRemoved?.(c), level, magnetTarget, baseSpeedMult);
     powerupSpawner.update(dt, (p) => renderer3d.onPowerupRemoved?.(p), level);
     particles = updateParticles(particles, dt);
 

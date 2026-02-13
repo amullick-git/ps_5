@@ -27,6 +27,7 @@ export function createObstacleSpawner(width, height) {
   let spawnTimer = 0;
   let lastSpawnInterval = SPAWN_INTERVAL_START;
   let gameTime = 0;
+  let onSpawnCallback = null;
   const obstacles = [];
 
   function getSpawnInterval(currentLevel = 1) {
@@ -100,14 +101,16 @@ export function createObstacleSpawner(width, height) {
     }
 
     const color = isSuddenHard ? 0x8B0000 : COLORS[Math.floor(Math.random() * COLORS.length)]; // Dark red for sudden hard
-    obstacles.push({
-      x, y, w: size.w, h: size.h, vx, vy, color, suddenHard: isSuddenHard,
+    const o = { x, y, w: size.w, h: size.h, vx, vy, color, suddenHard: isSuddenHard,
       bouncesRemaining: isSuddenHard ? SUDDEN_HARD_BOUNCES : 0,
-    });
+    };
+    obstacles.push(o);
+    if (onSpawnCallback) onSpawnCallback(o);
   }
 
   return {
     obstacles,
+    setOnSpawn(fn) { onSpawnCallback = fn; },
     getGameTime: () => gameTime,
     update(dt, level = 1, speedMultiplier = 1) {
       gameTime += dt;
