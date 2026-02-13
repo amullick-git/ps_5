@@ -22,6 +22,19 @@ export function setHighLevel(level) {
   localStorage.setItem(HIGH_LEVEL_KEY, String(level));
 }
 
+export function showPointsPopup(points) {
+  const el = document.getElementById('points-popup');
+  if (!el) return;
+  el.textContent = `+${points}`;
+  el.classList.remove('hidden');
+  el.classList.add('points-popup-visible');
+  clearTimeout(el._pointsTimeout);
+  el._pointsTimeout = setTimeout(() => {
+    el.classList.add('hidden');
+    el.classList.remove('points-popup-visible');
+  }, 800);
+}
+
 export function showLevelUp(level) {
   const el = document.getElementById('level-up-overlay');
   const text = document.getElementById('level-up-text');
@@ -47,6 +60,7 @@ export function showMenu() {
   document.getElementById('paused-overlay').classList.add('hidden');
   document.getElementById('countdown-overlay')?.classList.add('hidden');
   document.getElementById('level-up-overlay')?.classList.add('hidden');
+  document.getElementById('points-popup')?.classList.add('hidden');
 }
 
 export function showPlaying(score, highScore, highLevel = 1, lives = 3) {
@@ -66,6 +80,7 @@ export function showGameOver(score, highScore, highLevel = 1) {
   document.getElementById('paused-overlay').classList.add('hidden');
   document.getElementById('countdown-overlay')?.classList.add('hidden');
   document.getElementById('level-up-overlay')?.classList.add('hidden');
+  document.getElementById('points-popup')?.classList.add('hidden');
   document.getElementById('game-over-screen').classList.remove('hidden');
   document.getElementById('final-score').textContent = `Score: ${score}`;
   document.getElementById('final-high-score').textContent = `Best: ${highScore}`;

@@ -10,6 +10,7 @@ import { createCollectibleSpawner } from './collectible.js';
 import { createPowerupSpawner } from './powerup.js';
 import * as audio from './audio.js';
 import * as renderer3d from './renderer3d.js';
+import * as ui from './ui.js';
 
 const SURVIVAL_POINTS_PER_SEC = 10;
 const OBSTACLE_CLEARED_POINTS = 25;
@@ -132,6 +133,7 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
     for (const c of collected) {
       audio.playCollect();
       triggerHaptic('collect');
+      ui.showPointsPopup?.(c.points);
       onScoreUpdate?.(c.points);
       particles = particles.concat(createCollectibleBurst(c.x, c.y, c.color));
       renderer3d.onCollectibleRemoved?.(c);
