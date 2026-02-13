@@ -149,6 +149,9 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
       }
     }
 
+    shakeX *= 1 - SHAKE_DECAY * dt;
+    shakeY *= 1 - SHAKE_DECAY * dt;
+
     return {};
   }
 
