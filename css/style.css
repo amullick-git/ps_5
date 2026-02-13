@@ -82,11 +82,15 @@ body {
   font-size: 1rem;
   font-weight: 500;
   letter-spacing: 0.25em;
+}
+
+#menu-screen .menu-best {
+  font-size: 1rem;
+  font-weight: 600;
   color: #00D9FF;
-  text-transform: uppercase;
-  opacity: 0.85;
-  margin-bottom: 2rem;
-  text-shadow: 0 0 8px rgba(0, 217, 255, 0.1);
+  margin-top: 0.25rem;
+  margin-bottom: 0.5rem;
+  opacity: 0.95;
 }
 
 #menu-screen p,

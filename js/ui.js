@@ -83,6 +83,8 @@ export function showMenu() {
   document.getElementById('level-up-overlay')?.classList.add('hidden');
   document.getElementById('points-popup')?.classList.add('hidden');
   document.getElementById('near-miss-bonus')?.classList.add('hidden');
+  const bestEl = document.getElementById('menu-best');
+  if (bestEl) bestEl.textContent = `Best: ${getHighScore()} — Best level: ${getHighLevel()}`;
 }
 
 export function showPlaying(score, highScore, highLevel = 1, lives = 3) {

@@ -34,10 +34,6 @@ let rafId = 0;
 let startGameOnNextFrame = false;
 let activated = false;
 let activatedAt = 0;
-let gameOverAt = 0;
-let restartRequested = false;
-const GAME_OVER_COOLDOWN = 0.8; // Seconds before restart input is accepted
-
 function startPlaying() {
   state = 'PLAYING';
   score = 0;
@@ -60,9 +56,7 @@ function addScore(points) {
 }
 
 function onGameOver() {
-  state = 'GAME_OVER';
-  gameOverAt = performance.now();
-  restartRequested = false;
+  state = 'MENU';
   clearButtonState();
   audio.stopBGM();
   const level = gameInstance?.getLevel?.() ?? 1;
@@ -70,7 +64,7 @@ function onGameOver() {
     highLevel = level;
     ui.setHighLevel(highLevel);
   }
-  ui.showGameOver(score, highScore, highLevel);
+  ui.showMenu();
 }
 
 function onLivesUpdate(lives) {
@@ -121,14 +115,6 @@ function loop(timestamp) {
       state = 'PLAYING';
       ui.hidePaused();
     }
-  } else if (state === 'GAME_OVER') {
-    const elapsed = (timestamp - gameOverAt) / 1000;
-    if (elapsed >= GAME_OVER_COOLDOWN && (anyBtn || restartRequested)) {
-      restartRequested = false;
-      clearButtonState();
-      audio.playMenuSelect();
-      startPlaying();
-    }
   }
 
   lastPausePressed = pauseBtn;
@@ -145,7 +131,7 @@ function loop(timestamp) {
     } else {
       ui.showCountdown(-1, 0);
     }
-  } else if (state === 'MENU' || state === 'GAME_OVER') {
+  } else if (state === 'MENU') {
     renderer3d.renderBackground?.();
   }
 
@@ -192,16 +178,14 @@ function init() {
   const container = document.getElementById('game-container');
   if (container) container.addEventListener('click', activate);
 
-  // Restart from game over: click, keydown, or touch (after cooldown)
-  function requestRestart() {
-    if (state !== 'GAME_OVER') return;
-    const elapsed = (performance.now() - gameOverAt) / 1000;
-    if (elapsed >= GAME_OVER_COOLDOWN) restartRequested = true;
+  // From menu (including after game over): click or key starts the game
+  function requestStartFromMenu() {
+    if (state === 'MENU') startGameOnNextFrame = true;
   }
-  document.addEventListener('click', requestRestart);
-  document.addEventListener('keydown', requestRestart);
-  document.addEventListener('touchstart', requestRestart, { passive: true });
-  if (container) container.addEventListener('click', requestRestart);
+  document.addEventListener('click', requestStartFromMenu);
+  document.addEventListener('keydown', requestStartFromMenu);
+  document.addEventListener('touchstart', requestStartFromMenu, { passive: true });
+  if (container) container.addEventListener('click', requestStartFromMenu);
 
   lastTime = performance.now();
   rafId = requestAnimationFrame(loop);
