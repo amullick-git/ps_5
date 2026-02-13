@@ -5,7 +5,7 @@
 
 const RADIUS = 20;
 const SPAWN_INTERVAL = 14;
-const LIFETIME = 10;
+const LIFETIME = 4;
 
 export const POWERUP_TYPES = {
   SHIELD: { id: 'shield', color: 0x2196F3, label: 'Shield' },
@@ -16,7 +16,8 @@ export const POWERUP_TYPES = {
 };
 
 const COMMON_TYPES = [POWERUP_TYPES.SHIELD, POWERUP_TYPES.SLOWMO, POWERUP_TYPES.MAGNET, POWERUP_TYPES.CLEAR];
-const LIFE_CHANCE = 0.08; // 8% chance for rare life power-up
+const LIFE_CHANCE = 0.05; // 5% chance for rare life power-up
+const LIFE_LIFETIME = 3; // Life power-up disappears after 3 seconds
 
 export function createPowerupSpawner(width, height) {
   let spawnTimer = SPAWN_INTERVAL * 0.7; // First spawn after ~10s
@@ -38,14 +39,15 @@ export function createPowerupSpawner(width, height) {
     const type = Math.random() < LIFE_CHANCE
       ? POWERUP_TYPES.LIFE
       : COMMON_TYPES[Math.floor(Math.random() * COMMON_TYPES.length)];
+    const lifetime = type === POWERUP_TYPES.LIFE ? LIFE_LIFETIME : LIFETIME;
     powerups.push({
       x: pos.x,
       y: pos.y,
       radius: RADIUS,
       type: type.id,
       color: type.color,
-      life: LIFETIME,
-      maxLife: LIFETIME,
+      life: lifetime,
+      maxLife: lifetime,
       floats: true,
       floatAngle: Math.random() * Math.PI * 2,
       floatCenterX: pos.x,

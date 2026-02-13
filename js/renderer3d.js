@@ -31,6 +31,25 @@ const particleMaterial = new THREE.MeshBasicMaterial({ color: 0xE53935, transpar
 // Torus (ring) — clearly distinct from player sphere and obstacle boxes
 const collectibleGeometry = new THREE.TorusGeometry(0.2, 0.08, 12, 16);
 
+function createStarGeometry(outerRadius = 0.2, innerRadius = 0.1, points = 5, depth = 0.15) {
+  const shape = new THREE.Shape();
+  for (let i = 0; i < points * 2; i++) {
+    const radius = i % 2 === 0 ? outerRadius : innerRadius;
+    const angle = (i / (points * 2)) * Math.PI * 2 - Math.PI / 2;
+    const x = Math.cos(angle) * radius;
+    const y = Math.sin(angle) * radius;
+    if (i === 0) shape.moveTo(x, y);
+    else shape.lineTo(x, y);
+  }
+  shape.closePath();
+  return new THREE.ExtrudeGeometry(shape, {
+    depth,
+    bevelEnabled: true,
+    bevelThickness: 0.02,
+    bevelSize: 0.02,
+  });
+}
+
 export function init(canvas, width, height) {
   if (scene) return;
   scene = new THREE.Scene();
@@ -142,19 +161,20 @@ export function render(player, obstacles, collectibles, particles, shakeX, shake
       const mat = new THREE.MeshStandardMaterial({
         color,
         emissive: color,
-        emissiveIntensity: 0.4,
-        metalness: 0.6,
+        emissiveIntensity: 0.7,
+        metalness: 0.3,
+        roughness: 0.2,
       });
-      p.mesh = new THREE.Mesh(collectibleGeometry.clone(), mat);
+      p.mesh = new THREE.Mesh(createStarGeometry(0.2, 0.1, 5, 0.12), mat);
       p.mesh.rotation.x = Math.PI / 2;
       scene.add(p.mesh);
       powerupMeshes.add(p.mesh);
     }
     const [px3, pz3] = to3D(p.x, p.y);
-    const bob = Math.sin(t) * 0.08;
-    const pulse = 1 + Math.sin(t * 2.5) * 0.12;
-    p.mesh.position.set(px3, 0.22 + bob, pz3);
-    p.mesh.rotation.y = t * 1.5;
+    const bob = Math.sin(t) * 0.1;
+    const pulse = 1 + Math.sin(t * 3) * 0.15;
+    p.mesh.position.set(px3, 0.25 + bob, pz3);
+    p.mesh.rotation.z = t * 1.2;
     p.mesh.scale.setScalar(pulse);
     p.mesh.visible = true;
   }

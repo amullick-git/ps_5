@@ -34,6 +34,9 @@ let rafId = 0;
 let startGameOnNextFrame = false;
 let activated = false;
 let activatedAt = 0;
+let gameOverAt = 0;
+let restartRequested = false;
+const GAME_OVER_COOLDOWN = 0.8; // Seconds before restart input is accepted
 
 function startPlaying() {
   state = 'PLAYING';
@@ -58,6 +61,9 @@ function addScore(points) {
 
 function onGameOver() {
   state = 'GAME_OVER';
+  gameOverAt = performance.now();
+  restartRequested = false;
+  clearButtonState();
   audio.stopBGM();
   const level = gameInstance?.getLevel?.() ?? 1;
   if (level > highLevel) {
@@ -85,14 +91,8 @@ function loop(timestamp) {
   const dt = Math.min((timestamp - lastTime) / 1000, 0.1);
   lastTime = timestamp;
 
-  // First activation: click, keydown, or controller — start loop and unlock audio
-  if (!activated && getAnyButtonPressed()) {
-    activated = true;
-    activatedAt = timestamp;
-    audio.initAudio();
-    audio.resumeAudio();
-    startGameOnNextFrame = true;
-  }
+  // First activation requires explicit user gesture (click, keydown, touch) — no auto-start from gamepad
+  // activate handler (below) is the only way to set activated and startGameOnNextFrame
 
   // If audio is blocked (e.g. controller-only start on Windows), prompt for a click
   if (activated && !audio.isAudioRunning() && timestamp - activatedAt > 1.5) {
@@ -122,7 +122,9 @@ function loop(timestamp) {
       ui.hidePaused();
     }
   } else if (state === 'GAME_OVER') {
-    if (anyBtn) {
+    const elapsed = (timestamp - gameOverAt) / 1000;
+    if (elapsed >= GAME_OVER_COOLDOWN && (anyBtn || restartRequested)) {
+      restartRequested = false;
       clearButtonState();
       audio.playMenuSelect();
       startPlaying();
@@ -136,6 +138,7 @@ function loop(timestamp) {
     gameInstance.render();
     ui.updateLevel(gameInstance.getLevel?.() ?? 1);
     ui.updateLives(gameInstance.getLives?.() ?? 3);
+    ui.updateShield(gameInstance.getShieldCount?.() ?? 0);
     if (gameInstance.getCountdownTimer?.() > 0) {
       ui.showCountdown(gameInstance.getCountdownPhase(), gameInstance.getCountdownTimer());
     } else {
@@ -168,12 +171,13 @@ function init() {
   document.addEventListener('keydown', unlockAudio, { once: false });
   document.addEventListener('touchstart', unlockAudio, { once: false, passive: true });
 
-  // Activation: click, keydown, or controller button (loop polls gamepad)
+  // Activation: requires click, keydown, or touch — no gamepad auto-start
   const activate = () => {
     if (activated) return;
     activated = true;
     document.removeEventListener('click', activate);
     document.removeEventListener('keydown', activate);
+    document.removeEventListener('touchstart', activate);
     audio.initAudio();
     audio.resumeAudio();
     activatedAt = performance.now();
@@ -182,6 +186,21 @@ function init() {
   };
   document.addEventListener('click', activate);
   document.addEventListener('keydown', activate);
+  document.addEventListener('touchstart', activate, { passive: true });
+
+  const container = document.getElementById('game-container');
+  if (container) container.addEventListener('click', activate);
+
+  // Restart from game over: click, keydown, or touch (after cooldown)
+  function requestRestart() {
+    if (state !== 'GAME_OVER') return;
+    const elapsed = (performance.now() - gameOverAt) / 1000;
+    if (elapsed >= GAME_OVER_COOLDOWN) restartRequested = true;
+  }
+  document.addEventListener('click', requestRestart);
+  document.addEventListener('keydown', requestRestart);
+  document.addEventListener('touchstart', requestRestart, { passive: true });
+  if (container) container.addEventListener('click', requestRestart);
 
   lastTime = performance.now();
   rafId = requestAnimationFrame(loop);

@@ -180,6 +180,48 @@ body {
   margin-top: 0.25rem;
 }
 
+#powerup-hud-legend {
+  order: 11;
+  flex-basis: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem 1rem;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 0.25rem;
+}
+
+#powerup-hud-legend span {
+  white-space: nowrap;
+}
+
+#powerup-hud-legend .pu-shield { color: #2196F3; }
+#powerup-hud-legend .pu-slowmo { color: #9C27B0; }
+#powerup-hud-legend .pu-magnet { color: #00BCD4; }
+#powerup-hud-legend .pu-life { color: #E91E63; }
+#powerup-hud-legend .pu-clear { color: #FFEB3B; }
+
+#powerup-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem 1.25rem;
+  font-size: 0.95rem;
+  margin: 1rem 0 0.5rem;
+}
+
+#powerup-legend span {
+  white-space: nowrap;
+  cursor: help;
+}
+
+#powerup-legend .pu-shield { color: #2196F3; }
+#powerup-legend .pu-slowmo { color: #9C27B0; }
+#powerup-legend .pu-magnet { color: #00BCD4; }
+#powerup-legend .pu-life { color: #E91E63; }
+#powerup-legend .pu-clear { color: #FFEB3B; }
+
 #paused-overlay {
   position: absolute;
   top: 0;

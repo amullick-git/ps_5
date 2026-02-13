@@ -20,7 +20,14 @@
       <div id="menu-screen">
         <h1>Dodge Run</h1>
         <p class="menu-tagline">Dodge • Survive • Score</p>
-        <p>Use the left stick to move. Avoid obstacles, grab collectibles and power-ups!</p>
+        <p>Use the left stick to move. Avoid obstacles (boxes), grab collectibles (rings) and power-ups (stars)!</p>
+        <div id="powerup-legend">
+          <span class="pu-shield" title="Block 1 hit">🛡 Blue = Shield</span>
+          <span class="pu-slowmo" title="Obstacles half speed 4s">⏱ Purple = Slow-mo</span>
+          <span class="pu-magnet" title="Pull collectibles 5s">🧲 Cyan = Magnet</span>
+          <span class="pu-life" title="+1 life">♥ Pink = +1 Life</span>
+          <span class="pu-clear" title="Clear obstacles">✕ Yellow = Clear</span>
+        </div>
         <p class="hint">Click or press any key to start (enables sound)</p>
         <p class="controller-hint">Connect your PS5 controller for the best experience</p>
       </div>
@@ -33,7 +40,14 @@
           <span id="high-score-display">Best: 0</span>
           <span id="high-level-display">Best Lvl: 1</span>
         </div>
-        <div id="pause-hint">Options to pause</div>
+        <div id="pause-hint">Options, Esc or P to pause</div>
+        <div id="powerup-hud-legend">
+          <span class="pu-shield" title="Block 1 hit">🛡 Shield</span>
+          <span class="pu-slowmo" title="Obstacles half speed">⏱ Slow</span>
+          <span class="pu-magnet" title="Pull collectibles">🧲 Magnet</span>
+          <span class="pu-life" title="+1 life">♥ Life</span>
+          <span class="pu-clear" title="Clear obstacles">✕ Clear</span>
+        </div>
       </div>
       <div id="game-over-screen" class="hidden">
         <h2>Game Over</h2>
@@ -44,7 +58,7 @@
       </div>
       <div id="paused-overlay" class="hidden">
         <h2>Paused</h2>
-        <p class="hint">Press Options to resume</p>
+        <p class="hint">Press Options, Esc or P to resume</p>
       </div>
       <div id="countdown-overlay" class="hidden">
         <span id="countdown-text">3</span>

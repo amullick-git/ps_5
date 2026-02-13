@@ -95,12 +95,15 @@ export function getAnyButtonPressed() {
 
 /**
  * Returns true if Options (pause) was pressed.
- * Button 9 = Options on DualSense.
+ * DualSense: button 9 = Options, button 10 = Touchpad (some use for pause).
  */
 export function getPausePressed() {
   const gp = navigator.getGamepads?.();
   const pad = gp?.[0];
-  if (pad?.buttons[9]?.pressed) return true;
+  if (pad) {
+    if (pad.buttons[9]?.pressed) return true;  // Options (DualSense)
+    if (pad.buttons[10]?.pressed) return true; // Touchpad / Start (fallback)
+  }
   return keys['Escape'] || keys['KeyP'];
 }
 
