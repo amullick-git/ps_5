@@ -10,8 +10,11 @@ const MIN_LIFETIME = 6;
 const MAX_LIFETIME = 12;
 const MAX_ON_SCREEN = 1;
 const POINTS = [50, 75, 100];
-// Color by points: 50=gold, 75=cyan, 100=magenta
-const COLOR_BY_POINTS = { 50: 0xFFD700, 75: 0x00BCD4, 100: 0xE91E63 };
+const BONUS_POINTS = 500;
+const BONUS_CHANCE = 0.08; // 8% chance for 500-point bonus
+const BONUS_LIFETIME = 2;
+// Color by points: 50=gold, 75=cyan, 100=magenta, 500=green (bonus, blinks)
+const COLOR_BY_POINTS = { 50: 0xFFD700, 75: 0x00BCD4, 100: 0xE91E63, 500: 0x00FF88 };
 
 const FLOAT_SPEED = 40;
 const FLOAT_RADIUS = 25;
@@ -39,8 +42,9 @@ export function createCollectibleSpawner(width, height) {
     if (collectibles.length >= MAX_ON_SCREEN) return;
 
     const pos = randomSafePosition();
-    const points = POINTS[Math.floor(Math.random() * POINTS.length)];
-    const lifetime = MIN_LIFETIME + Math.random() * (MAX_LIFETIME - MIN_LIFETIME);
+    const isBonus = Math.random() < BONUS_CHANCE;
+    const points = isBonus ? BONUS_POINTS : POINTS[Math.floor(Math.random() * POINTS.length)];
+    const lifetime = isBonus ? BONUS_LIFETIME : MIN_LIFETIME + Math.random() * (MAX_LIFETIME - MIN_LIFETIME);
     const floats = Math.random() > 0.4;
     const angle = Math.random() * Math.PI * 2;
 
@@ -57,6 +61,7 @@ export function createCollectibleSpawner(width, height) {
       floatAngle: angle,
       floatCenterX: pos.x,
       floatCenterY: pos.y,
+      blinks: isBonus,
     });
   }
 

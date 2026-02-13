@@ -152,7 +152,7 @@ export function render(player, obstacles, collectibles, particles, shakeX, shake
     c.mesh.position.set(cx, 0.2 + bob, cz);
     c.mesh.rotation.y = t;
     c.mesh.scale.setScalar(pulse);
-    c.mesh.visible = true;
+    c.mesh.visible = c.blinks ? Math.floor(t * 8) % 2 === 0 : true;
   }
 
   for (const p of powerups || []) {
