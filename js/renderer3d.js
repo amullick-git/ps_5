@@ -18,6 +18,7 @@ let playerMesh, particleMeshes = [];
 let obstacleMeshes = new Set();
 let collectibleMeshes = new Set();
 let powerupMeshes = new Set();
+let portalMeshes = new Set();
 const playerGeometry = new THREE.SphereGeometry(0.2, 32, 32);
 const playerMaterial = new THREE.MeshStandardMaterial({
   color: 0x5EFF5E,
@@ -95,11 +96,15 @@ export function renderBackground() {
 const NORMAL_BG = 0x1a1a2e;
 const BOSS_BG_DARK = 0x2a1414;
 const BOSS_BG_LIGHT = 0x3a1e1e;
+const PORTAL_BG = 0x1a0a2e;
 
-export function render(player, obstacles, collectibles, particles, shakeX, shakeY, nearMissGlow, hideObstacles = false, invincibleBlink = false, powerups = [], hasShield = false, bossWaveActive = false) {
+export function render(player, obstacles, collectibles, particles, shakeX, shakeY, nearMissGlow, hideObstacles = false, invincibleBlink = false, powerups = [], hasShield = false, bossWaveActive = false, portals = [], portalMode = false) {
   if (!scene || !camera || !renderer) return;
 
-  if (bossWaveActive) {
+  if (portalMode) {
+    if (scene.background) scene.background.setHex(PORTAL_BG);
+    if (groundMesh?.material?.color) groundMesh.material.color.setHex(PORTAL_BG);
+  } else if (bossWaveActive) {
     const t = (Math.sin(Date.now() * 0.004) + 1) / 2; // 0..1 pulse
     const bossColor = new THREE.Color(BOSS_BG_DARK).lerp(new THREE.Color(BOSS_BG_LIGHT), t);
     if (scene.background) scene.background.copy(bossColor);
@@ -228,6 +233,48 @@ export function render(player, obstacles, collectibles, particles, shakeX, shake
     o.mesh.visible = !hideObstacles;
   }
 
+  for (const port of portals || []) {
+    if (!port.mesh) {
+      const baseColor = port.color ?? 0x9C27B0;
+      const crystals = new THREE.Group();
+      const count = 4;
+      const radius = 0.32;
+      const colors = [0x9C27B0, 0xAB47BC, 0xBA68C8, 0xE040FB];
+      for (let i = 0; i < count; i++) {
+        const geo = new THREE.OctahedronGeometry(0.12, 0);
+        const mat = new THREE.MeshStandardMaterial({
+          color: colors[i] ?? baseColor,
+          emissive: colors[i] ?? baseColor,
+          emissiveIntensity: 0.8,
+          metalness: 0.5,
+          roughness: 0.2,
+        });
+        const crystal = new THREE.Mesh(geo, mat);
+        const angle = (i / count) * Math.PI * 2;
+        crystal.position.set(Math.cos(angle) * radius, 0.25, Math.sin(angle) * radius);
+        crystal.rotation.y = -angle;
+        crystal.scale.set(1, 1.4, 0.7);
+        crystals.add(crystal);
+      }
+      port.mesh = crystals;
+      scene.add(port.mesh);
+      portalMeshes.add(port.mesh);
+    }
+    const [portX, portZ] = to3D(port.x, port.y);
+    port.mesh.position.set(portX, 0.15, portZ);
+    port.mesh.rotation.y = t * 0.8;
+    const throb = Math.sin(t * 5) * 0.5 + 0.5;
+    const scale = 1 + throb * 0.08;
+    const emissivePulse = 0.65 + throb * 0.2;
+    port.mesh.scale.setScalar(scale);
+    port.mesh.traverse((child) => {
+      if (child.material?.emissiveIntensity !== undefined) {
+        child.material.emissiveIntensity = emissivePulse;
+      }
+    });
+    port.mesh.visible = true;
+  }
+
   while (particleMeshes.length > particles.length) {
     const m = particleMeshes.pop();
     scene.remove(m);
@@ -292,6 +339,18 @@ export function onPowerupRemoved(powerup) {
   }
 }
 
+export function onPortalRemoved(portal) {
+  if (portal.mesh) {
+    portal.mesh.traverse((child) => {
+      if (child.geometry) child.geometry.dispose();
+      if (child.material) child.material.dispose();
+    });
+    scene.remove(portal.mesh);
+    portalMeshes.delete(portal.mesh);
+    portal.mesh = null;
+  }
+}
+
 export function reset() {
   obstacleMeshes.clear();
   collectibleMeshes.forEach(m => {
@@ -310,6 +369,16 @@ export function reset() {
     }
   });
   powerupMeshes.clear();
+  portalMeshes.forEach(m => {
+    if (m && m.parent) {
+      m.traverse((child) => {
+        if (child.geometry) child.geometry.dispose();
+        if (child.material) child.material.dispose();
+      });
+      scene.remove(m);
+    }
+  });
+  portalMeshes.clear();
   if (playerMesh?.shieldRing) {
     scene.remove(playerMesh.shieldRing);
     playerMesh.shieldRing.geometry?.dispose();

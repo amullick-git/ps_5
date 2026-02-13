@@ -126,6 +126,7 @@ function loop(timestamp) {
     ui.updateLives(gameInstance.getLives?.() ?? 3);
     ui.updateNearMissCount(gameInstance.getNearMissComboCount?.() ?? 0);
     ui.updateShield(gameInstance.getShieldCount?.() ?? 0);
+    ui.updatePortalTimer?.(gameInstance.getPortalTimer?.() ?? 0);
     if (gameInstance.getCountdownTimer?.() > 0) {
       ui.showCountdown(gameInstance.getCountdownPhase(), gameInstance.getCountdownTimer());
     } else {

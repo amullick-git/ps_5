@@ -4,10 +4,11 @@
 
 import { getMovement, triggerHaptic } from './controller.js';
 import { updatePlayer } from './player.js';
-import { checkPlayerObstacles, checkPlayerCollectibles, checkPlayerPowerups, closestObstacleAndDistance } from './collision.js';
+import { checkPlayerObstacles, checkPlayerCollectibles, checkPlayerPowerups, checkPlayerPortal, closestObstacleAndDistance } from './collision.js';
 import { createParticleBurst, createCollectibleBurst, updateParticles } from './particles.js';
 import { createCollectibleSpawner } from './collectible.js';
 import { createPowerupSpawner } from './powerup.js';
+import { createPortalSpawner } from './portal.js';
 import { FEATURES, isFeatureEnabled, getFeaturesUnlockedAtLevel, FEATURE_LABELS } from './features.js';
 import * as audio from './audio.js';
 import * as renderer3d from './renderer3d.js';
@@ -25,6 +26,9 @@ const STARTING_LIVES = 3;
 const INVINCIBILITY_DURATION = 2;
 const BOSS_WAVE_DURATION = 6;
 const BOSS_WAVE_SPEED_MULT = 2;
+const PORTAL_BONUS_DURATION = 8;
+const PORTAL_COLLECTIBLE_SPAWN_INTERVAL = 0.45;
+const PORTAL_COLLECTIBLE_MAX = 12;
 
 export function createGame(canvas, width, height, player, obstacleSpawner, onGameOver, onScoreUpdate, onLevelUp, onLivesUpdate) {
   width = width ?? canvas?.width ?? 800;
@@ -42,8 +46,13 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
   });
   const powerupSpawner = createPowerupSpawner(width, height);
   powerupSpawner.reset((p) => renderer3d.onPowerupRemoved?.(p));
+  const portalSpawner = createPortalSpawner(width, height);
 
   let survivalAccum = 0;
+  let portalMode = false;
+  let portalTimer = 0;
+  let portalCollectibles = [];
+  let portalCollectibleSpawnTimer = 0;
   let countdownTimer = 3.5;
   let countdownPhase = 3;
   let gameOverAnimTimer = 0;
@@ -96,6 +105,62 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
     }
 
     const movement = getMovement();
+
+    // Portal bonus mode — collectibles only for 8s, obstacles block (no damage)
+    if (portalMode) {
+      const prevX = player.x;
+      const prevY = player.y;
+      updatePlayer(player, movement, dt, width, height);
+      if (checkPlayerObstacles(player, obstacleSpawner.obstacles)) {
+        player.x = prevX;
+        player.y = prevY;
+      }
+      portalTimer -= dt;
+      portalCollectibleSpawnTimer += dt;
+      const PORTAL_POINTS = [50, 75, 100];
+      const PORTAL_COLORS = { 50: 0xFFD700, 75: 0x00BCD4, 100: 0xE91E63 };
+      if (portalCollectibleSpawnTimer >= PORTAL_COLLECTIBLE_SPAWN_INTERVAL && portalCollectibles.length < PORTAL_COLLECTIBLE_MAX) {
+        portalCollectibleSpawnTimer = 0;
+        const pts = PORTAL_POINTS[Math.floor(Math.random() * PORTAL_POINTS.length)];
+        const pad = 50;
+        portalCollectibles.push({
+          x: pad + Math.random() * (width - pad * 2),
+          y: pad + Math.random() * (height - pad * 2),
+          radius: 18,
+          points: pts,
+          color: PORTAL_COLORS[pts],
+          life: 15,
+          maxLife: 15,
+        });
+      }
+      for (let i = portalCollectibles.length - 1; i >= 0; i--) {
+        portalCollectibles[i].life -= dt;
+        if (portalCollectibles[i].life <= 0) {
+          renderer3d.onCollectibleRemoved?.(portalCollectibles[i]);
+          portalCollectibles.splice(i, 1);
+        }
+      }
+      const collected = checkPlayerCollectibles(player, portalCollectibles);
+      for (const c of collected) {
+        audio.playCollect();
+        triggerHaptic('collect');
+        ui.showPointsPopup?.(c.points, c.x, c.y);
+        onScoreUpdate?.(c.points);
+        particles = particles.concat(createCollectibleBurst(c.x, c.y, c.color));
+        renderer3d.onCollectibleRemoved?.(c);
+        portalCollectibles.splice(portalCollectibles.indexOf(c), 1);
+      }
+      particles = updateParticles(particles, dt);
+      if (portalTimer <= 0) {
+        portalMode = false;
+        portalCollectibles.forEach((c) => renderer3d.onCollectibleRemoved?.(c));
+        portalCollectibles = [];
+      }
+      shakeX *= 1 - SHAKE_DECAY * dt;
+      shakeY *= 1 - SHAKE_DECAY * dt;
+      return {};
+    }
+
     updatePlayer(player, movement, dt, width, height);
 
     // Process power-up collection BEFORE obstacle/collectible updates so effects apply immediately
@@ -118,6 +183,20 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
         onScoreUpdate?.(n * OBSTACLE_CLEARED_POINTS);
       }
     }
+
+    const bonusPortalEnabled = isFeatureEnabled(FEATURES.BONUS_PORTAL, level);
+    const hitPortal = checkPlayerPortal(player, portalSpawner.portals);
+    if (hitPortal && bonusPortalEnabled) {
+      audio.playPowerUp?.();
+      triggerHaptic('levelUp');
+      portalSpawner.remove(hitPortal, (p) => renderer3d.onPortalRemoved?.(p));
+      portalMode = true;
+      portalTimer = PORTAL_BONUS_DURATION;
+      portalCollectibles = [];
+      portalCollectibleSpawnTimer = 0;
+    }
+
+    portalSpawner.update(dt, (p) => renderer3d.onPortalRemoved?.(p), null, bonusPortalEnabled && !portalMode);
 
     const baseSpeedMult = slowmoTimer > 0 ? 0.5 : (bossWaveTimer > 0 ? BOSS_WAVE_SPEED_MULT : 1);
     if (slowmoTimer > 0) slowmoTimer -= dt;
@@ -253,16 +332,18 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
     renderer3d.render(
       player,
       obstacleSpawner.obstacles,
-      collectibleSpawner.collectibles,
+      portalMode ? portalCollectibles : collectibleSpawner.collectibles,
       particles,
       shakeX,
       shakeY,
       glow,
       false,
       invincibleBlink,
-      powerupSpawner.powerups,
+      portalMode ? [] : powerupSpawner.powerups,
       shieldCount > 0,
-      bossWaveActive
+      bossWaveActive,
+      portalMode ? [] : portalSpawner.portals,
+      portalMode
     );
   }
 
@@ -276,5 +357,7 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
     getLives: () => lives,
     getShieldCount: () => shieldCount,
     getNearMissComboCount: () => nearMissTimestamps.length,
+    getPortalMode: () => portalMode,
+    getPortalTimer: () => portalTimer,
   };
 }

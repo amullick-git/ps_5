@@ -48,6 +48,17 @@ export function checkPlayerPowerups(player, powerups) {
   return collected;
 }
 
+/** Returns the first portal the player is touching, or null. */
+export function checkPlayerPortal(player, portals) {
+  if (!portals || portals.length === 0) return null;
+  for (const p of portals) {
+    if (circleCircle(player.x, player.y, player.radius, p.x, p.y, p.radius)) {
+      return p;
+    }
+  }
+  return null;
+}
+
 /** Distance from player center to closest point on obstacle. For near-miss detection. */
 export function closestObstacleDistance(player, obstacles) {
   const result = closestObstacleAndDistance(player, obstacles);

@@ -352,6 +352,18 @@ body {
   100% { opacity: 0; }
 }
 
+#portal-timer-overlay {
+  position: absolute;
+  bottom: 5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #9C27B0;
+  text-shadow: 0 0 12px rgba(156, 39, 176, 0.6);
+  pointer-events: none;
+}
+
 #points-popup {
   position: absolute;
   left: 50%;

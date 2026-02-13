@@ -15,6 +15,7 @@ export const FEATURES = {
   COLLECTIBLE_FLOAT: 'collectibleFloat',
   NEAR_MISS_COMBO: 'nearMissCombo',
   SUDDEN_HARD_OBSTACLES: 'suddenHardObstacles',
+  BONUS_PORTAL: 'bonusPortal',
 };
 
 /** Level at which each feature unlocks (1 = from start). Ordered by unlock level. */
@@ -33,10 +34,14 @@ export const FEATURE_UNLOCK_LEVEL = {
   [FEATURES.BOSS_WAVE]: 5,              // Every 3rd level: red screen, 2× speed, 6s
   // Level 6
   [FEATURES.NEAR_MISS_COMBO]: 6,        // 3 near-misses in 6s = +500 bonus
-  [FEATURES.COLLECTIBLE_IN_FRONT]: 6,   // 500pt collectible spawns in front of obstacles (8%)
+  // Level 7
+  [FEATURES.COLLECTIBLE_IN_FRONT]: 7,   // 500pt collectible spawns in front of obstacles (8%)
   // Level 8
   [FEATURES.COLLECTIBLE_BONUS]: 8,      // 8% chance for 500pt random bonus ring (blinks, 2s)
-  [FEATURES.SUDDEN_HARD_OBSTACLES]: 8,  // 6% chance for large bouncing obstacles (80×80)
+  // Level 9
+  [FEATURES.SUDDEN_HARD_OBSTACLES]: 9,  // 6% chance for large bouncing obstacles (80×80)
+  // Level 10
+  [FEATURES.BONUS_PORTAL]: 1,           // Portals: enter for 8s collectibles-only bonus room
 };
 
 export function isFeatureEnabled(feature, level) {
@@ -56,6 +61,7 @@ export const FEATURE_LABELS = {
   [FEATURES.COLLECTIBLE_FLOAT]: 'Collectible float',
   [FEATURES.NEAR_MISS_COMBO]: 'Near-miss combo',
   [FEATURES.SUDDEN_HARD_OBSTACLES]: 'Sudden hard obstacles',
+  [FEATURES.BONUS_PORTAL]: 'Bonus portal',
 };
 
 /** Returns feature keys that unlock exactly at the given level. */
