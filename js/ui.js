@@ -22,10 +22,31 @@ export function setHighLevel(level) {
   localStorage.setItem(HIGH_LEVEL_KEY, String(level));
 }
 
-export function showPointsPopup(points) {
+export function showNearMissBonus(points) {
+  const el = document.getElementById('near-miss-bonus');
+  const text = document.getElementById('near-miss-bonus-text');
+  if (!el || !text) return;
+  text.textContent = `3 Near Misses! +${points}`;
+  el.classList.remove('hidden');
+  el.classList.add('near-miss-bonus-visible');
+  clearTimeout(el._nearMissTimeout);
+  el._nearMissTimeout = setTimeout(() => {
+    el.classList.add('hidden');
+    el.classList.remove('near-miss-bonus-visible');
+  }, 1500);
+}
+
+export function showPointsPopup(points, x, y) {
   const el = document.getElementById('points-popup');
   if (!el) return;
   el.textContent = `+${points}`;
+  if (x != null && y != null) {
+    el.style.left = `${(x / 800) * 100}%`;
+    el.style.top = `${(y / 600) * 100}%`;
+  } else {
+    el.style.left = '50%';
+    el.style.top = '50%';
+  }
   el.classList.remove('hidden');
   el.classList.add('points-popup-visible');
   clearTimeout(el._pointsTimeout);
@@ -61,6 +82,7 @@ export function showMenu() {
   document.getElementById('countdown-overlay')?.classList.add('hidden');
   document.getElementById('level-up-overlay')?.classList.add('hidden');
   document.getElementById('points-popup')?.classList.add('hidden');
+  document.getElementById('near-miss-bonus')?.classList.add('hidden');
 }
 
 export function showPlaying(score, highScore, highLevel = 1, lives = 3) {
@@ -81,6 +103,7 @@ export function showGameOver(score, highScore, highLevel = 1) {
   document.getElementById('countdown-overlay')?.classList.add('hidden');
   document.getElementById('level-up-overlay')?.classList.add('hidden');
   document.getElementById('points-popup')?.classList.add('hidden');
+  document.getElementById('near-miss-bonus')?.classList.add('hidden');
   document.getElementById('game-over-screen').classList.remove('hidden');
   document.getElementById('final-score').textContent = `Score: ${score}`;
   document.getElementById('final-high-score').textContent = `Best: ${highScore}`;

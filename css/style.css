@@ -299,8 +299,8 @@ body {
 
 #points-popup {
   position: absolute;
-  top: 50%;
   left: 50%;
+  top: 50%;
   transform: translate(-50%, -50%);
   font-size: 2.5rem;
   font-weight: 700;
@@ -311,6 +311,43 @@ body {
 
 #points-popup.points-popup-visible {
   animation: points-popup 0.8s ease-out forwards;
+}
+
+#near-miss-bonus {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2rem;
+  font-weight: 700;
+  color: #FF6600;
+  text-shadow: 0 0 16px rgba(255, 102, 0, 0.6);
+  pointer-events: none;
+}
+
+#near-miss-bonus.near-miss-bonus-visible {
+  animation: near-miss-bonus-pop 1.5s ease-out forwards;
+}
+
+@keyframes near-miss-bonus-pop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+  30% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -70%) scale(1.1);
+  }
 }
 
 @keyframes points-popup {

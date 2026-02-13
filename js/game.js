@@ -14,6 +14,9 @@ import * as ui from './ui.js';
 
 const SURVIVAL_POINTS_PER_SEC = 10;
 const OBSTACLE_CLEARED_POINTS = 25;
+const NEAR_MISS_COMBO_COUNT = 3;
+const NEAR_MISS_COMBO_WINDOW = 6;
+const NEAR_MISS_COMBO_POINTS = 500;
 const NEAR_MISS_DIST = 55;
 const SHAKE_DECAY = 8;
 const LEVEL_DURATION = 20; // Seconds per level
@@ -41,6 +44,7 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
   let nearMissGlow = 0;
   let wasNearMiss = false;
   let nearMissCooldown = 0;
+  let nearMissTimestamps = [];
   let level = 1;
   let levelUpAnimTimer = 0;
   let lives = STARTING_LIVES;
@@ -133,7 +137,7 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
     for (const c of collected) {
       audio.playCollect();
       triggerHaptic('collect');
-      ui.showPointsPopup?.(c.points);
+      ui.showPointsPopup?.(c.points, c.x, c.y);
       onScoreUpdate?.(c.points);
       particles = particles.concat(createCollectibleBurst(c.x, c.y, c.color));
       renderer3d.onCollectibleRemoved?.(c);
@@ -149,12 +153,21 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
 
     const closest = closestObstacleDistance(player, obstacleSpawner.obstacles);
     const isNearMiss = closest < NEAR_MISS_DIST && closest > player.radius;
+    const nmGameTime = obstacleSpawner.getGameTime?.() ?? 0;
     if (isNearMiss) {
       nearMissGlow = Math.min(1, nearMissGlow + dt * 10);
       if (!wasNearMiss && nearMissCooldown <= 0) {
         audio.playNearMiss();
         triggerHaptic('nearMiss');
         nearMissCooldown = 0.4;
+        nearMissTimestamps.push(nmGameTime);
+        nearMissTimestamps = nearMissTimestamps.filter((t) => nmGameTime - t <= NEAR_MISS_COMBO_WINDOW);
+        if (nearMissTimestamps.length >= NEAR_MISS_COMBO_COUNT) {
+          onScoreUpdate?.(NEAR_MISS_COMBO_POINTS);
+          ui.showNearMissBonus?.(NEAR_MISS_COMBO_POINTS);
+          triggerHaptic('levelUp');
+          nearMissTimestamps = [];
+        }
       }
       wasNearMiss = true;
     } else {
