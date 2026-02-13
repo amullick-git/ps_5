@@ -8,6 +8,9 @@ const SIZES = [
   { w: 50, h: 50 },
   { w: 70, h: 70 },
 ];
+const SUDDEN_HARD_SIZE = { w: 80, h: 80 };
+const SUDDEN_HARD_CHANCE = 0.06; // 6% of spawns
+const SUDDEN_HARD_BOUNCES = 2;
 const COLORS = [
   0xE53935, 0xFF5722, 0xE91E63, 0x9C27B0, 0x00BCD4, 0xFF9800,
   0x7C4DFF, 0xFF4081, 0x00E676, 0xFFAB00, 0x5E35B1, 0x18FFFF,
@@ -50,13 +53,15 @@ export function createObstacleSpawner(width, height) {
     const cap = getMaxObstacles(currentLevel);
     if (obstacles.length >= cap) return;
 
-    const size = SIZES[Math.floor(Math.random() * SIZES.length)];
-    const speed = getSpeed(currentLevel);
+    const isSuddenHard = Math.random() < SUDDEN_HARD_CHANCE;
+    const size = isSuddenHard ? SUDDEN_HARD_SIZE : SIZES[Math.floor(Math.random() * SIZES.length)];
+    const speed = isSuddenHard ? getSpeed(currentLevel) * 2 : getSpeed(currentLevel);
     const centerX = width / 2;
     const centerY = height / 2;
 
     const edge = Math.floor(Math.random() * 4); // 0=top, 1=right, 2=bottom, 3=left
-    const offset = (1 + Math.random()) * Math.max(size.w, size.h);
+    // Sudden: spawn much closer so it appears with little warning
+    const offset = isSuddenHard ? Math.max(size.w, size.h) * 0.3 : (1 + Math.random()) * Math.max(size.w, size.h);
 
     let x, y, vx, vy;
 
@@ -94,8 +99,11 @@ export function createObstacleSpawner(width, height) {
       vy = (dy / mag) * speed;
     }
 
-    const color = COLORS[Math.floor(Math.random() * COLORS.length)];
-    obstacles.push({ x, y, w: size.w, h: size.h, vx, vy, color });
+    const color = isSuddenHard ? 0x8B0000 : COLORS[Math.floor(Math.random() * COLORS.length)]; // Dark red for sudden hard
+    obstacles.push({
+      x, y, w: size.w, h: size.h, vx, vy, color, suddenHard: isSuddenHard,
+      bouncesRemaining: isSuddenHard ? SUDDEN_HARD_BOUNCES : 0,
+    });
   }
 
   return {
@@ -116,6 +124,28 @@ export function createObstacleSpawner(width, height) {
         const o = obstacles[i];
         o.x += o.vx * dt * speedMultiplier;
         o.y += o.vy * dt * speedMultiplier;
+
+        // Sudden hard: bounce off walls when moving INTO them from inside (not when entering)
+        if (o.suddenHard && o.bouncesRemaining > 0) {
+          if (o.x < 0 && o.vx < 0) {
+            o.vx = -o.vx;
+            o.x = 0;
+            o.bouncesRemaining--;
+          } else if (o.x + o.w > width && o.vx > 0) {
+            o.vx = -o.vx;
+            o.x = width - o.w;
+            o.bouncesRemaining--;
+          }
+          if (o.y < 0 && o.vy < 0) {
+            o.vy = -o.vy;
+            o.y = 0;
+            o.bouncesRemaining--;
+          } else if (o.y + o.h > height && o.vy > 0) {
+            o.vy = -o.vy;
+            o.y = height - o.h;
+            o.bouncesRemaining--;
+          }
+        }
       }
     },
     removeOutside(width, height, onRemove) {

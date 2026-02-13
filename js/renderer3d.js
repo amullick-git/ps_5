@@ -182,14 +182,32 @@ export function render(player, obstacles, collectibles, particles, shakeX, shake
   for (const o of obstacles) {
     if (!o.mesh) {
       const color = o.color ?? 0xE53935;
-      const emissive = new THREE.Color(color).multiplyScalar(0.12);
-      const mat = new THREE.MeshStandardMaterial({ color, emissive });
+      const isSuddenHard = o.suddenHard === true;
+      const mat = isSuddenHard
+        ? new THREE.MeshStandardMaterial({
+            color,
+            emissive: color,
+            emissiveIntensity: 0.5,
+            metalness: 0.2,
+            roughness: 0.3,
+          })
+        : new THREE.MeshStandardMaterial({
+            color,
+            emissive: new THREE.Color(color).multiplyScalar(0.12),
+          });
       o.mesh = new THREE.Mesh(
         new THREE.BoxGeometry(o.w / SCALE, 0.3, o.h / SCALE, 2, 2, 2),
         mat
       );
       scene.add(o.mesh);
       obstacleMeshes.add(o.mesh);
+    }
+    if (o.suddenHard) {
+      if (o.mesh?.material?.emissiveIntensity !== undefined) {
+        o.mesh.material.emissiveIntensity = 0.4 + Math.sin(t * 4) * 0.2;
+      }
+      o.mesh.rotation.y = t * 1.5;
+      o.mesh.rotation.x = t * 0.8;
     }
     const [ox, oz] = to3D(o.x + o.w / 2, o.y + o.h / 2);
     o.mesh.position.set(ox, 0.15, oz);
