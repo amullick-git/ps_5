@@ -153,6 +153,11 @@ export function updateLives(lives) {
   if (el) el.textContent = `♥ ${lives}`;
 }
 
+export function updateNearMissCount(count) {
+  const el = document.getElementById('near-miss-display');
+  if (el) el.textContent = `Near: ${count}/3`;
+}
+
 export function updateShield(count) {
   const el = document.getElementById('shield-display');
   if (!el) return;

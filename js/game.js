@@ -236,5 +236,6 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
     getLevelUpAnimTimer: () => levelUpAnimTimer,
     getLives: () => lives,
     getShieldCount: () => shieldCount,
+    getNearMissComboCount: () => nearMissTimestamps.length,
   };
 }

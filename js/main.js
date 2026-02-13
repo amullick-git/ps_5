@@ -138,6 +138,7 @@ function loop(timestamp) {
     gameInstance.render();
     ui.updateLevel(gameInstance.getLevel?.() ?? 1);
     ui.updateLives(gameInstance.getLives?.() ?? 3);
+    ui.updateNearMissCount(gameInstance.getNearMissComboCount?.() ?? 0);
     ui.updateShield(gameInstance.getShieldCount?.() ?? 0);
     if (gameInstance.getCountdownTimer?.() > 0) {
       ui.showCountdown(gameInstance.getCountdownPhase(), gameInstance.getCountdownTimer());
