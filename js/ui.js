@@ -49,7 +49,7 @@ export function showMenu() {
   document.getElementById('level-up-overlay')?.classList.add('hidden');
 }
 
-export function showPlaying(score, highScore, highLevel = 1) {
+export function showPlaying(score, highScore, highLevel = 1, lives = 3) {
   document.getElementById('menu-screen').classList.add('hidden');
   document.getElementById('game-over-screen').classList.add('hidden');
   document.getElementById('paused-overlay').classList.add('hidden');
@@ -57,6 +57,7 @@ export function showPlaying(score, highScore, highLevel = 1) {
   updateScore(score);
   updateHighScore(highScore);
   updateHighLevel(highLevel);
+  updateLives(lives);
 }
 
 export function showGameOver(score, highScore, highLevel = 1) {
@@ -107,6 +108,11 @@ export function updateHighScore(highScore) {
 export function updateHighLevel(highLevel) {
   const el = document.getElementById('high-level-display');
   if (el) el.textContent = `Best Lvl: ${highLevel}`;
+}
+
+export function updateLives(lives) {
+  const el = document.getElementById('lives-display');
+  if (el) el.textContent = `♥ ${lives}`;
 }
 
 export function showSoundHint() {

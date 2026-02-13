@@ -72,12 +72,12 @@ export function renderBackground() {
   renderer.render(scene, camera);
 }
 
-export function render(player, obstacles, collectibles, particles, shakeX, shakeY, nearMissGlow, hideObstacles = false) {
+export function render(player, obstacles, collectibles, particles, shakeX, shakeY, nearMissGlow, hideObstacles = false, invincibleBlink = false) {
   if (!scene || !camera || !renderer) return;
 
   const [px, pz] = to3D(player.x, player.y);
   playerMesh.position.set(px, 0.2, pz);
-  playerMesh.visible = true;
+  playerMesh.visible = invincibleBlink ? Math.floor(Date.now() / 80) % 2 === 0 : true;
   // Near-miss: bright orange glow + scale pulse for very visible feedback
   const baseColor = new THREE.Color(0x5EFF5E);
   const nearMissColor = new THREE.Color(0xFF6600);

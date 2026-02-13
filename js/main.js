@@ -41,8 +41,8 @@ function startPlaying() {
   resetPlayer(player, WIDTH, HEIGHT);
   highScore = ui.getHighScore();
   highLevel = ui.getHighLevel();
-  ui.showPlaying(score, highScore, highLevel);
-  gameInstance = createGame(canvas, WIDTH, HEIGHT, player, obstacleSpawner, onGameOver, addScore, onLevelUp);
+  ui.showPlaying(score, highScore, highLevel, 3);
+  gameInstance = createGame(canvas, WIDTH, HEIGHT, player, obstacleSpawner, onGameOver, addScore, onLevelUp, onLivesUpdate);
   // BGM starts after countdown (handled in game loop)
 }
 
@@ -65,6 +65,10 @@ function onGameOver() {
     ui.setHighLevel(highLevel);
   }
   ui.showGameOver(score, highScore, highLevel);
+}
+
+function onLivesUpdate(lives) {
+  ui.updateLives(lives);
 }
 
 function onLevelUp(level) {
@@ -131,6 +135,7 @@ function loop(timestamp) {
   if (state === 'PLAYING' || state === 'PAUSED') {
     gameInstance.render();
     ui.updateLevel(gameInstance.getLevel?.() ?? 1);
+    ui.updateLives(gameInstance.getLives?.() ?? 3);
     if (gameInstance.getCountdownTimer?.() > 0) {
       ui.showCountdown(gameInstance.getCountdownPhase(), gameInstance.getCountdownTimer());
     } else {

@@ -15,8 +15,10 @@ const OBSTACLE_CLEARED_POINTS = 25;
 const NEAR_MISS_DIST = 55;
 const SHAKE_DECAY = 8;
 const LEVEL_DURATION = 20; // Seconds per level
+const STARTING_LIVES = 3;
+const INVINCIBILITY_DURATION = 2;
 
-export function createGame(canvas, width, height, player, obstacleSpawner, onGameOver, onScoreUpdate, onLevelUp) {
+export function createGame(canvas, width, height, player, obstacleSpawner, onGameOver, onScoreUpdate, onLevelUp, onLivesUpdate) {
   width = width ?? canvas?.width ?? 800;
   height = height ?? canvas?.height ?? 600;
 
@@ -37,6 +39,8 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
   let nearMissCooldown = 0;
   let level = 1;
   let levelUpAnimTimer = 0;
+  let lives = STARTING_LIVES;
+  let invincibilityTimer = 0;
 
   const onObstacleRemoved = (o) => renderer3d.onObstacleRemoved(o);
 
@@ -85,6 +89,7 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
       onLevelUp?.(level);
     }
     if (levelUpAnimTimer > 0) levelUpAnimTimer -= dt;
+    if (invincibilityTimer > 0) invincibilityTimer -= dt;
 
     collectibleSpawner.update(dt, (c) => renderer3d.onCollectibleRemoved?.(c), level);
     particles = updateParticles(particles, dt);
@@ -129,13 +134,19 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
       onScoreUpdate?.(secs * SURVIVAL_POINTS_PER_SEC);
     }
 
-    if (checkPlayerObstacles(player, obstacleSpawner.obstacles)) {
+    if (invincibilityTimer <= 0 && checkPlayerObstacles(player, obstacleSpawner.obstacles)) {
       audio.playHit();
       triggerHaptic('collision');
       particles = createParticleBurst(player.x, player.y);
       shakeX = shakeY = 20;
       nearMissGlow = 0;
-      gameOverAnimTimer = 0.5;
+      lives--;
+      onLivesUpdate?.(lives);
+      if (lives <= 0) {
+        gameOverAnimTimer = 0.5;
+      } else {
+        invincibilityTimer = INVINCIBILITY_DURATION;
+      }
     }
 
     return {};
@@ -143,6 +154,7 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
 
   function render() {
     const glow = gameOverAnimTimer > 0 ? 0 : nearMissGlow;
+    const invincibleBlink = invincibilityTimer > 0;
     renderer3d.render(
       player,
       obstacleSpawner.obstacles,
@@ -151,7 +163,8 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
       shakeX,
       shakeY,
       glow,
-      false
+      false,
+      invincibleBlink
     );
   }
 
@@ -162,5 +175,6 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
     getCountdownTimer: () => countdownTimer,
     getLevel: () => level,
     getLevelUpAnimTimer: () => levelUpAnimTimer,
+    getLives: () => lives,
   };
 }

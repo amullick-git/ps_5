@@ -107,9 +107,10 @@ export function startBGM() {
   osc.frequency.value = 110;
   osc.connect(filter);
   filter.type = 'lowpass';
-  filter.frequency.value = 200;
+  filter.frequency.value = 120;
+  filter.Q.value = 0.5;
   filter.connect(gain);
-  gain.gain.value = 0.04;
+  gain.gain.value = 0.012;
   gain.connect(ctx.destination);
   osc.start(ctx.currentTime);
   bgmNode = osc;

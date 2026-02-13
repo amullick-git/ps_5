@@ -147,6 +147,12 @@ body {
   font-weight: 600;
 }
 
+#lives-display {
+  color: #E91E63;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
 #score-display,
 #high-score-display {
   color: #EEEEEE;
