@@ -115,6 +115,17 @@ export function updateLives(lives) {
   if (el) el.textContent = `♥ ${lives}`;
 }
 
+export function updateShield(count) {
+  const el = document.getElementById('shield-display');
+  if (!el) return;
+  if (count > 0) {
+    el.textContent = `🛡 ${count}`;
+    el.classList.remove('hidden');
+  } else {
+    el.classList.add('hidden');
+  }
+}
+
 export function showSoundHint() {
   const el = document.getElementById('sound-hint');
   if (el) el.classList.remove('hidden');

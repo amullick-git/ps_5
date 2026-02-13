@@ -91,6 +91,14 @@ export function playLevelUp() {
   setTimeout(() => playTone(784, 0.12, 'sine', 0.3), 160);
 }
 
+export function playPowerUp() {
+  if (!ctx) return;
+  playTone(523, 0.06, 'sine', 0.3);
+  setTimeout(() => playTone(659, 0.06, 'sine', 0.25), 50);
+  setTimeout(() => playTone(784, 0.08, 'sine', 0.35), 100);
+  setTimeout(() => playTone(1047, 0.12, 'sine', 0.3), 150);
+}
+
 export function playGo() {
   if (!ctx) return;
   playTone(523, 0.06, 'sine', 0.3);

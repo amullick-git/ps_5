@@ -101,7 +101,7 @@ export function createObstacleSpawner(width, height) {
   return {
     obstacles,
     getGameTime: () => gameTime,
-    update(dt, level = 1) {
+    update(dt, level = 1, speedMultiplier = 1) {
       gameTime += dt;
       currentLevel = level;
       lastSpawnInterval = getSpawnInterval(level);
@@ -114,8 +114,8 @@ export function createObstacleSpawner(width, height) {
 
       for (let i = obstacles.length - 1; i >= 0; i--) {
         const o = obstacles[i];
-        o.x += o.vx * dt;
-        o.y += o.vy * dt;
+        o.x += o.vx * dt * speedMultiplier;
+        o.y += o.vy * dt * speedMultiplier;
       }
     },
     removeOutside(width, height, onRemove) {

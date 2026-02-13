@@ -153,6 +153,12 @@ body {
   font-weight: 600;
 }
 
+#shield-display {
+  color: #2196F3;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
 #score-display,
 #high-score-display {
   color: #EEEEEE;

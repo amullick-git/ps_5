@@ -17,6 +17,7 @@ let scene, camera, renderer;
 let playerMesh, particleMeshes = [];
 let obstacleMeshes = new Set();
 let collectibleMeshes = new Set();
+let powerupMeshes = new Set();
 const playerGeometry = new THREE.SphereGeometry(0.2, 32, 32);
 const playerMaterial = new THREE.MeshStandardMaterial({
   color: 0x5EFF5E,
@@ -72,7 +73,7 @@ export function renderBackground() {
   renderer.render(scene, camera);
 }
 
-export function render(player, obstacles, collectibles, particles, shakeX, shakeY, nearMissGlow, hideObstacles = false, invincibleBlink = false) {
+export function render(player, obstacles, collectibles, particles, shakeX, shakeY, nearMissGlow, hideObstacles = false, invincibleBlink = false, powerups = [], hasShield = false) {
   if (!scene || !camera || !renderer) return;
 
   const [px, pz] = to3D(player.x, player.y);
@@ -89,6 +90,26 @@ export function render(player, obstacles, collectibles, particles, shakeX, shake
   const basePulse = 1 + Math.sin(Date.now() * 0.003) * 0.03;
   const nearMissScale = 1 + nearMissGlow * 0.25;
   playerMesh.scale.setScalar(basePulse * nearMissScale);
+
+  if (hasShield && !playerMesh.shieldRing) {
+    const ringGeo = new THREE.RingGeometry(0.28, 0.35, 24);
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: 0x2196F3,
+      transparent: true,
+      opacity: 0.6,
+      side: THREE.DoubleSide,
+    });
+    playerMesh.shieldRing = new THREE.Mesh(ringGeo, ringMat);
+    playerMesh.shieldRing.rotation.x = -Math.PI / 2;
+    scene.add(playerMesh.shieldRing);
+  }
+  if (playerMesh.shieldRing) {
+    playerMesh.shieldRing.visible = hasShield;
+    if (hasShield) {
+      playerMesh.shieldRing.position.set(px, 0.01, pz);
+      playerMesh.shieldRing.rotation.z = Date.now() * 0.002;
+    }
+  }
 
   const t = Date.now() * 0.002;
   for (const c of collectibles || []) {
@@ -113,6 +134,29 @@ export function render(player, obstacles, collectibles, particles, shakeX, shake
     c.mesh.rotation.y = t;
     c.mesh.scale.setScalar(pulse);
     c.mesh.visible = true;
+  }
+
+  for (const p of powerups || []) {
+    if (!p.mesh) {
+      const color = p.color ?? 0x2196F3;
+      const mat = new THREE.MeshStandardMaterial({
+        color,
+        emissive: color,
+        emissiveIntensity: 0.4,
+        metalness: 0.6,
+      });
+      p.mesh = new THREE.Mesh(collectibleGeometry.clone(), mat);
+      p.mesh.rotation.x = Math.PI / 2;
+      scene.add(p.mesh);
+      powerupMeshes.add(p.mesh);
+    }
+    const [px3, pz3] = to3D(p.x, p.y);
+    const bob = Math.sin(t) * 0.08;
+    const pulse = 1 + Math.sin(t * 2.5) * 0.12;
+    p.mesh.position.set(px3, 0.22 + bob, pz3);
+    p.mesh.rotation.y = t * 1.5;
+    p.mesh.scale.setScalar(pulse);
+    p.mesh.visible = true;
   }
 
   for (const o of obstacles) {
@@ -181,6 +225,16 @@ export function onCollectibleRemoved(collectible) {
   }
 }
 
+export function onPowerupRemoved(powerup) {
+  if (powerup.mesh) {
+    scene.remove(powerup.mesh);
+    powerup.mesh.geometry.dispose();
+    powerup.mesh.material.dispose();
+    powerupMeshes.delete(powerup.mesh);
+    powerup.mesh = null;
+  }
+}
+
 export function reset() {
   obstacleMeshes.clear();
   collectibleMeshes.forEach(m => {
@@ -191,6 +245,20 @@ export function reset() {
     }
   });
   collectibleMeshes.clear();
+  powerupMeshes.forEach(m => {
+    if (m && m.parent) {
+      scene.remove(m);
+      m.geometry?.dispose();
+      m.material?.dispose();
+    }
+  });
+  powerupMeshes.clear();
+  if (playerMesh?.shieldRing) {
+    scene.remove(playerMesh.shieldRing);
+    playerMesh.shieldRing.geometry?.dispose();
+    playerMesh.shieldRing.material?.dispose();
+    playerMesh.shieldRing = null;
+  }
   particleMeshes.forEach(m => {
     if (m && m.parent) {
       scene.remove(m);

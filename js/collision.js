@@ -38,6 +38,16 @@ export function checkPlayerCollectibles(player, collectibles) {
   return collected;
 }
 
+export function checkPlayerPowerups(player, powerups) {
+  const collected = [];
+  for (const p of powerups) {
+    if (circleCircle(player.x, player.y, player.radius, p.x, p.y, p.radius)) {
+      collected.push(p);
+    }
+  }
+  return collected;
+}
+
 /** Distance from player center to closest point on obstacle. For near-miss detection. */
 export function closestObstacleDistance(player, obstacles) {
   let minDist = Infinity;

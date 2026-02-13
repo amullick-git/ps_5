@@ -66,7 +66,7 @@ export function createCollectibleSpawner(width, height) {
       spawnTimer = getSpawnInterval(1);
       spawn(); // Spawn immediately on "Go!"
     },
-    update(dt, onExpire, level = 1) {
+    update(dt, onExpire, level = 1, magnetTarget = null) {
       spawnTimer += dt;
       const interval = getSpawnInterval(level);
       if (spawnTimer >= interval) {
@@ -74,11 +74,21 @@ export function createCollectibleSpawner(width, height) {
         spawn();
       }
 
+      const MAGNET_SPEED = 180;
       for (let i = collectibles.length - 1; i >= 0; i--) {
         const c = collectibles[i];
         c.life -= dt;
 
-        if (c.floats) {
+        if (magnetTarget) {
+          const dx = magnetTarget.x - c.x;
+          const dy = magnetTarget.y - c.y;
+          const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+          const pull = Math.min(1, 80 / dist);
+          c.x += (dx / dist) * MAGNET_SPEED * dt * pull;
+          c.y += (dy / dist) * MAGNET_SPEED * dt * pull;
+          c.floatCenterX = c.x;
+          c.floatCenterY = c.y;
+        } else if (c.floats) {
           c.floatAngle += dt * 2;
           c.x = c.floatCenterX + Math.cos(c.floatAngle) * FLOAT_RADIUS;
           c.y = c.floatCenterY + Math.sin(c.floatAngle) * FLOAT_RADIUS;

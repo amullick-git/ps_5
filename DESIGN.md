@@ -9,10 +9,11 @@
 1. Player moves using the left analog stick.
 2. Obstacles spawn from screen edges and move toward the center/player area.
 3. Collectibles spawn in the play area; player can collect them for extra points.
-4. Player avoids contact with obstacles.
-5. Score increases over time, for each obstacle cleared, and for collectibles collected.
-6. Collision with an obstacle = game over.
-7. Player can restart and try to beat their high score.
+4. Power-ups spawn periodically; player can collect them for temporary effects.
+5. Player avoids contact with obstacles.
+6. Score increases over time, for each obstacle cleared, collectibles collected, and obstacles cleared by power-up.
+7. Collision with an obstacle costs one life (or shield if active); 3 lives, game over when lives reach 0.
+8. Player can restart and try to beat their high score and highest level.
 
 ### 1.3 Design Pillars
 - **Simple controls** — One stick to move, no additional actions required.
@@ -51,8 +52,9 @@ ps_5/
 │   ├── controller.js       # Gamepad polling, input normalization
 │   ├── player.js           # Player entity, movement, bounds
 │   ├── obstacle.js         # Obstacle spawner, types, movement
-│   ├── collectible.js      # Collectible spawner, points, lifetime
-│   ├── collision.js        # Collision detection (AABB, circle-circle)
+│   ├── collectible.js      # Collectible spawner, points, lifetime, magnet pull
+│   ├── powerup.js          # Power-up spawner (shield, slowmo, magnet, life, clear)
+│   ├── collision.js        # Collision detection (AABB, circle-circle, power-ups)
 │   ├── particles.js        # Particle burst on game over
 │   ├── renderer3d.js       # Three.js 3D renderer
 │   ├── audio.js            # Web Audio: hit, pass, menu, BGM, near-miss
@@ -97,7 +99,7 @@ ps_5/
 | State | Description | User Actions |
 |-------|-------------|--------------|
 | **MENU** | Title, instructions, "Press any button to start" | Any gamepad button or key → PLAYING |
-| **PLAYING** | Active gameplay; starts with 3…2…1…Go! countdown (~3.5 s) | Collision → GAME_OVER; Options button → PAUSED |
+| **PLAYING** | Active gameplay; 3 lives; starts with 3…2…1…Go! countdown (~3.5 s) | Collision → lose life (or shield); lives = 0 → GAME_OVER; Options → PAUSED |
 | **GAME_OVER** | Score, high score, "Press any button to restart" | Any button → PLAYING (direct restart) |
 | **PAUSED** | Overlay "Paused", dimmed game | Options button (toggle) → PLAYING |
 
@@ -181,7 +183,7 @@ ps_5/
 
 | Property | Value | Notes |
 |----------|-------|-------|
-| Shape | Octahedron (diamond) | Distinct from player sphere and obstacle boxes |
+| Shape | Torus (ring) | Distinct from player sphere and obstacle boxes |
 | Radius | 18 px | For collision (circle approximation) |
 | Spawn | Random position in play area | Padding 60 px from edges |
 | Behavior | Static or floating | ~60% float in a small circle (radius 25 px) |
@@ -194,6 +196,41 @@ ps_5/
 - First collectible spawns when countdown reaches "Go!".
 - Subsequent spawns every ~1.2 s until max on screen (6).
 - On expiry, mesh is removed from scene; on collection, play chime and add points.
+- **Magnet power-up**: When active, collectibles drift toward player.
+
+### 5.7 Power-ups
+
+| Property | Value | Notes |
+|----------|-------|-------|
+| Shape | Torus (ring) | Same as collectibles; distinct colors per type |
+| Radius | 20 px | Slightly larger than collectibles |
+| Spawn | Random position in play area | Max 1 on screen; ~14 s interval |
+| Lifetime | 10 s | Disappear if not collected |
+| Types | Shield, Slow-mo, Magnet, Life, Clear | See table below |
+
+| Type | Color | Effect |
+|------|-------|--------|
+| **Shield** | Blue (#2196F3) | Absorb one hit; blue ring around player |
+| **Slow-mo** | Purple (#9C27B0) | Obstacles move at 50% speed for 4 s |
+| **Magnet** | Cyan (#00BCD4) | Collectibles drift toward player for 5 s |
+| **+1 Life** | Pink (#E91E63) | Add one life — **rare** (8% spawn chance) |
+| **Clear** | Yellow (#FFEB3B) | Remove all obstacles; score 25 pts each |
+
+**Spawn Logic**:
+- First power-up after ~10 s; then every ~14 s.
+- Life power-up has 8% chance; others share remaining 92% equally.
+- On collection: play power-up chime, apply effect, remove from scene.
+
+### 5.8 Lives
+
+| Property | Value | Notes |
+|----------|-------|-------|
+| Starting lives | 3 | Displayed in HUD as ♥ 3 |
+| Hit behavior | Lose 1 life | Or consume 1 shield if active |
+| Invincibility | 2 s after hit | Player blinks; no damage |
+| Game over | When lives = 0 | After hit with no lives or shield |
+
+**Displayed**: Current lives, shield count (🛡 when active), high score, high level (persisted in `localStorage`).
 
 ---
 
@@ -203,7 +240,8 @@ ps_5/
 - **Player**: Circle, center `(px, py)`, radius `r`.
 - **Obstacle**: Axis-Aligned Bounding Box (AABB) only in v1.
 - **Collectible**: Circle approximation; radius 18 px.
-- **Algorithms**: Circle–AABB (player vs obstacle); Circle–Circle (player vs collectible).
+- **Power-up**: Circle; radius 20 px.
+- **Algorithms**: Circle–AABB (player vs obstacle); Circle–Circle (player vs collectible, player vs power-up).
 
 ### 6.2 Circle–AABB (Player vs Rect Obstacle)
 1. Find closest point on rectangle to circle center.
@@ -216,7 +254,8 @@ ps_5/
 3. On collection: add points, remove collectible, play chime.
 
 ### 6.4 Response
-- On obstacle collision: set state to `GAME_OVER`, stop spawning, show final score.
+- On obstacle collision: If shield active, consume shield. Else: lose 1 life, 2 s invincibility. If lives = 0, set state to `GAME_OVER`.
+- On power-up collection: Apply effect (shield/slowmo/magnet/life/clear), remove power-up, play power-up chime.
 
 ---
 
@@ -231,7 +270,7 @@ ps_5/
 
 **Obstacle cleared rule**: Awarded when an obstacle’s bounding box is fully outside the play area (any edge) without having collided with the player. Implement by checking obstacle bounds against canvas edges; when fully past, remove from active list and add +25 points.
 
-**Displayed**: Current score, high score (persisted in `localStorage` under key `dodgeRunHighScore`).
+**Displayed**: Current score, high score (persisted in `localStorage` under key `dodgeRunHighScore`), highest level reached (key `dodgeRunHighLevel`).
 
 ---
 
@@ -260,7 +299,7 @@ ps_5/
 ## 9. Audio
 
 - **BGM**: Low-key sine loop (110 Hz) during gameplay; starts after countdown.
-- **SFX**: Hit (thud on collision), pass (tone on obstacle cleared), menu select (click on start/restart), near-miss (descending pitch 660→440 Hz, ~0.22 s) when obstacle within ~55 px; 0.4 s cooldown; collect (two-tone chime) on collectible pickup.
+- **SFX**: Hit (thud on collision), pass (tone on obstacle cleared), menu select (click on start/restart), near-miss (descending pitch 660→440 Hz, ~0.22 s) when obstacle within ~55 px; 0.4 s cooldown; collect (two-tone chime) on collectible pickup; power-up (ascending chime) on power-up pickup.
 - **Implementation**: Web Audio API; procedural generation, no external files; init on first user interaction.
 
 ---
@@ -329,12 +368,20 @@ ps_5/
 - [x] **Retina / HiDPI** — `setPixelRatio` up to 3×; `getBoundingClientRect()` for display size; higher geometry detail (player 32×32, particles 12×12); `powerPreference: 'high-performance'`.
 
 ### Phase 7: Collectibles & Color Variety
-- [x] **Collectibles** — Diamond-shaped (octahedron) objects; 50/75/100 pts; static or floating; 6–12 s lifetime; max 6 on screen; spawn ~1.2 s; first spawn at "Go!"; collect chime.
+- [x] **Collectibles** — Torus-shaped (ring) objects; 50/75/100 pts; static or floating; 6–12 s lifetime; max 1 on screen; spawn ~1.2–2.5 s; first spawn at "Go!"; collect chime.
 - [x] **Collectible collision** — Circle–circle detection; removal and scoring on collection.
 - [x] **Multiple obstacle colors** — Red, orange, pink, purple palette; random per obstacle.
 - [x] **Collectible colors by points** — Gold (50), cyan (75), magenta (100).
 
-### Phase 8: Optional
+### Phase 8: Lives & Power-ups
+- [x] **Lives** — 3 lives; lose one on hit; 2 s invincibility after hit; game over when lives = 0.
+- [x] **Power-ups** — Shield, Slow-mo, Magnet, +1 Life (rare), Clear; spawn ~14 s; max 1 on screen; 10 s lifetime.
+- [x] **Shield** — Absorb one hit; blue ring around player; HUD indicator.
+- [x] **Slow-mo** — Obstacles move at 50% speed for 4 s.
+- [x] **Magnet** — Collectibles drift toward player for 5 s.
+- [x] **High level** — Persist and display highest level reached (`dodgeRunHighLevel`).
+
+### Phase 9: Optional
 - [ ] Multiple obstacle shapes (circles)
 
 ---
@@ -342,7 +389,6 @@ ps_5/
 ## 13. Open Questions / TBD
 
 - Exact obstacle shapes (all rects vs mix of rects and circles).
-- Whether to add power-ups or shields in a later version.
 - Mobile support (touch controls) for future iterations.
 
 ---
@@ -470,14 +516,17 @@ displayWidth = Math.max(rect.width || WIDTH, 1);
 
 ### 15.4 Web Storage (localStorage)
 
-**Purpose**: Persist high score across sessions.
+**Purpose**: Persist high score and high level across sessions.
 
 **Usage** (ui.js):
 
 ```javascript
 const HIGH_SCORE_KEY = 'dodgeRunHighScore';
+const HIGH_LEVEL_KEY = 'dodgeRunHighLevel';
 localStorage.getItem(HIGH_SCORE_KEY) || '0';
 localStorage.setItem(HIGH_SCORE_KEY, String(score));
+localStorage.getItem(HIGH_LEVEL_KEY) || '1';
+localStorage.setItem(HIGH_LEVEL_KEY, String(level));
 ```
 
 ---
@@ -530,5 +579,5 @@ scene.add(mesh);
 
 ---
 
-*Document Version: 1.5*  
+*Document Version: 1.6*  
 *Last Updated: 2026-02-12*

@@ -4,9 +4,10 @@
 
 import { getMovement, triggerHaptic } from './controller.js';
 import { updatePlayer } from './player.js';
-import { checkPlayerObstacles, checkPlayerCollectibles, closestObstacleDistance } from './collision.js';
+import { checkPlayerObstacles, checkPlayerCollectibles, checkPlayerPowerups, closestObstacleDistance } from './collision.js';
 import { createParticleBurst, createCollectibleBurst, updateParticles } from './particles.js';
 import { createCollectibleSpawner } from './collectible.js';
+import { createPowerupSpawner } from './powerup.js';
 import * as audio from './audio.js';
 import * as renderer3d from './renderer3d.js';
 
@@ -27,6 +28,8 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
   obstacleSpawner.reset((o) => renderer3d.onObstacleRemoved(o));
   const collectibleSpawner = createCollectibleSpawner(width, height);
   collectibleSpawner.reset((c) => renderer3d.onCollectibleRemoved?.(c));
+  const powerupSpawner = createPowerupSpawner(width, height);
+  powerupSpawner.reset((p) => renderer3d.onPowerupRemoved?.(p));
 
   let survivalAccum = 0;
   let countdownTimer = 3.5;
@@ -41,6 +44,9 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
   let levelUpAnimTimer = 0;
   let lives = STARTING_LIVES;
   let invincibilityTimer = 0;
+  let shieldCount = 0;
+  let slowmoTimer = 0;
+  let magnetTimer = 0;
 
   const onObstacleRemoved = (o) => renderer3d.onObstacleRemoved(o);
 
@@ -76,7 +82,33 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
 
     const movement = getMovement();
     updatePlayer(player, movement, dt, width, height);
-    obstacleSpawner.update(dt, level);
+
+    // Process power-up collection BEFORE obstacle/collectible updates so effects apply immediately
+    const collectedPowerups = checkPlayerPowerups(player, powerupSpawner.powerups);
+    for (const p of collectedPowerups) {
+      audio.playPowerUp?.();
+      triggerHaptic('collect');
+      particles = particles.concat(createCollectibleBurst(p.x, p.y, p.color));
+      renderer3d.onPowerupRemoved?.(p);
+      const idx = powerupSpawner.powerups.indexOf(p);
+      if (idx >= 0) powerupSpawner.powerups.splice(idx, 1);
+      if (p.type === 'shield') shieldCount++;
+      else if (p.type === 'slowmo') slowmoTimer = 4;
+      else if (p.type === 'magnet') magnetTimer = 5;
+      else if (p.type === 'life') { lives++; onLivesUpdate?.(lives); }
+      else if (p.type === 'clear') {
+        const n = obstacleSpawner.obstacles.length;
+        obstacleSpawner.obstacles.forEach((o) => onObstacleRemoved(o));
+        obstacleSpawner.obstacles.length = 0;
+        onScoreUpdate?.(n * OBSTACLE_CLEARED_POINTS);
+      }
+    }
+
+    const speedMultiplier = slowmoTimer > 0 ? 0.5 : 1;
+    if (slowmoTimer > 0) slowmoTimer -= dt;
+    if (magnetTimer > 0) magnetTimer -= dt;
+
+    obstacleSpawner.update(dt, level, speedMultiplier);
 
     // Level progression: level up every LEVEL_DURATION seconds
     const gameTime = obstacleSpawner.getGameTime?.() ?? 0;
@@ -91,7 +123,9 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
     if (levelUpAnimTimer > 0) levelUpAnimTimer -= dt;
     if (invincibilityTimer > 0) invincibilityTimer -= dt;
 
-    collectibleSpawner.update(dt, (c) => renderer3d.onCollectibleRemoved?.(c), level);
+    const magnetTarget = magnetTimer > 0 ? { x: player.x, y: player.y } : null;
+    collectibleSpawner.update(dt, (c) => renderer3d.onCollectibleRemoved?.(c), level, magnetTarget);
+    powerupSpawner.update(dt, (p) => renderer3d.onPowerupRemoved?.(p), level);
     particles = updateParticles(particles, dt);
 
     const collected = checkPlayerCollectibles(player, collectibleSpawner.collectibles);
@@ -140,12 +174,17 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
       particles = createParticleBurst(player.x, player.y);
       shakeX = shakeY = 20;
       nearMissGlow = 0;
-      lives--;
-      onLivesUpdate?.(lives);
-      if (lives <= 0) {
-        gameOverAnimTimer = 0.5;
-      } else {
+      if (shieldCount > 0) {
+        shieldCount--;
         invincibilityTimer = INVINCIBILITY_DURATION;
+      } else {
+        lives--;
+        onLivesUpdate?.(lives);
+        if (lives <= 0) {
+          gameOverAnimTimer = 0.5;
+        } else {
+          invincibilityTimer = INVINCIBILITY_DURATION;
+        }
       }
     }
 
@@ -167,7 +206,9 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
       shakeY,
       glow,
       false,
-      invincibleBlink
+      invincibleBlink,
+      powerupSpawner.powerups,
+      shieldCount > 0
     );
   }
 
@@ -179,5 +220,6 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
     getLevel: () => level,
     getLevelUpAnimTimer: () => levelUpAnimTimer,
     getLives: () => lives,
+    getShieldCount: () => shieldCount,
   };
 }
