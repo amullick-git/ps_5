@@ -57,9 +57,9 @@ export function createPowerupSpawner(width, height) {
 
   return {
     powerups,
-    update(dt, onExpire, level = 1) {
+    update(dt, onExpire, level = 1, powerupsEnabled = true) {
       spawnTimer += dt;
-      if (spawnTimer >= SPAWN_INTERVAL) {
+      if (powerupsEnabled && spawnTimer >= SPAWN_INTERVAL) {
         spawnTimer = 0;
         spawn();
       }

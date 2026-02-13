@@ -36,8 +36,10 @@ export function createObstacleSpawner(width, height) {
     return SPAWN_INTERVAL_START - (SPAWN_INTERVAL_START - SPAWN_INTERVAL_MIN) * t;
   }
 
-  function getSpeed(currentLevel = 1) {
-    const l = Math.max(0, currentLevel - 1);
+  let currentSpeedLevel = 1;
+
+  function getSpeed(lvl = 1) {
+    const l = Math.max(0, (lvl ?? 1) - 1);
     const t = Math.min(l * 0.05, 1); // Slower ramp: ~21 levels to max
     return BASE_SPEED + (MAX_SPEED - BASE_SPEED) * t;
   }
@@ -49,14 +51,17 @@ export function createObstacleSpawner(width, height) {
   }
 
   let currentLevel = 1;
+  let currentCountLevel = 1;
+  let currentSpawnLevel = 1;
+  let suddenHardEnabled = true;
 
   function spawn() {
-    const cap = getMaxObstacles(currentLevel);
+    const cap = getMaxObstacles(currentCountLevel);
     if (obstacles.length >= cap) return;
 
-    const isSuddenHard = Math.random() < SUDDEN_HARD_CHANCE;
+    const isSuddenHard = suddenHardEnabled && Math.random() < SUDDEN_HARD_CHANCE;
     const size = isSuddenHard ? SUDDEN_HARD_SIZE : SIZES[Math.floor(Math.random() * SIZES.length)];
-    const speed = isSuddenHard ? getSpeed(currentLevel) * 2 : getSpeed(currentLevel);
+    const speed = isSuddenHard ? getSpeed(currentSpeedLevel) * 2 : getSpeed(currentSpeedLevel);
     const centerX = width / 2;
     const centerY = height / 2;
 
@@ -112,10 +117,14 @@ export function createObstacleSpawner(width, height) {
     obstacles,
     setOnSpawn(fn) { onSpawnCallback = fn; },
     getGameTime: () => gameTime,
-    update(dt, level = 1, speedMultiplier = 1) {
+    update(dt, level = 1, speedMultiplier = 1, speedLevel = undefined, countLevel = undefined, spawnLevel = undefined, suddenHard = true) {
       gameTime += dt;
       currentLevel = level;
-      lastSpawnInterval = getSpawnInterval(level);
+      currentSpeedLevel = speedLevel ?? level;
+      currentCountLevel = countLevel ?? level;
+      currentSpawnLevel = spawnLevel ?? level;
+      suddenHardEnabled = suddenHard;
+      lastSpawnInterval = getSpawnInterval(currentSpawnLevel);
       spawnTimer += dt;
 
       if (spawnTimer >= lastSpawnInterval) {

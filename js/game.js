@@ -8,6 +8,7 @@ import { checkPlayerObstacles, checkPlayerCollectibles, checkPlayerPowerups, clo
 import { createParticleBurst, createCollectibleBurst, updateParticles } from './particles.js';
 import { createCollectibleSpawner } from './collectible.js';
 import { createPowerupSpawner } from './powerup.js';
+import { FEATURES, isFeatureEnabled } from './features.js';
 import * as audio from './audio.js';
 import * as renderer3d from './renderer3d.js';
 import * as ui from './ui.js';
@@ -35,7 +36,9 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
   const collectibleSpawner = createCollectibleSpawner(width, height);
   collectibleSpawner.reset((c) => renderer3d.onCollectibleRemoved?.(c));
   obstacleSpawner.setOnSpawn?.((o) => {
-    if (Math.random() < 0.08) collectibleSpawner.spawnInFrontOfObstacle?.(o);
+    if (isFeatureEnabled(FEATURES.COLLECTIBLE_IN_FRONT, level) && Math.random() < 0.08) {
+      collectibleSpawner.spawnInFrontOfObstacle?.(o);
+    }
   });
   const powerupSpawner = createPowerupSpawner(width, height);
   powerupSpawner.reset((p) => renderer3d.onPowerupRemoved?.(p));
@@ -77,7 +80,7 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
       if (countdownPhase === 0 && prev === 1) {
         audio.playGo();
         audio.startBGM();
-        collectibleSpawner.primeFirstSpawn?.();
+        if (isFeatureEnabled(FEATURES.COLLECTIBLES, 1)) collectibleSpawner.primeFirstSpawn?.();
       }
       return { countdownPhase, countdownTimer };
     }
@@ -120,7 +123,11 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
     if (slowmoTimer > 0) slowmoTimer -= dt;
     if (magnetTimer > 0) magnetTimer -= dt;
 
-    obstacleSpawner.update(dt, level, baseSpeedMult);
+    const speedLevel = isFeatureEnabled(FEATURES.OBSTACLE_SPEED_RAMP, level) ? level : 1;
+    const countLevel = isFeatureEnabled(FEATURES.OBSTACLE_COUNT_RAMP, level) ? level : 1;
+    const spawnLevel = isFeatureEnabled(FEATURES.OBSTACLE_SPAWN_RAMP, level) ? level : 1;
+    const suddenHardEnabled = isFeatureEnabled(FEATURES.SUDDEN_HARD_OBSTACLES, level);
+    obstacleSpawner.update(dt, level, baseSpeedMult, speedLevel, countLevel, spawnLevel, suddenHardEnabled);
 
     // Level progression: level up every LEVEL_DURATION seconds
     const gameTime = obstacleSpawner.getGameTime?.() ?? 0;
@@ -128,7 +135,7 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
     if (newLevel > level) {
       level = newLevel;
       levelUpAnimTimer = 1.2;
-      if (level % 3 === 0) bossWaveTimer = BOSS_WAVE_DURATION;
+      if (isFeatureEnabled(FEATURES.BOSS_WAVE, level) && level % 3 === 0) bossWaveTimer = BOSS_WAVE_DURATION;
       audio.playLevelUp?.();
       triggerHaptic('levelUp');
       onLevelUp?.(level);
@@ -138,8 +145,12 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
     if (invincibilityTimer > 0) invincibilityTimer -= dt;
 
     const magnetTarget = magnetTimer > 0 ? { x: player.x, y: player.y } : null;
-    collectibleSpawner.update(dt, (c) => renderer3d.onCollectibleRemoved?.(c), level, magnetTarget, baseSpeedMult);
-    powerupSpawner.update(dt, (p) => renderer3d.onPowerupRemoved?.(p), level);
+    const collectiblesEnabled = isFeatureEnabled(FEATURES.COLLECTIBLES, level);
+    const collectibleBonusEnabled = isFeatureEnabled(FEATURES.COLLECTIBLE_BONUS, level);
+    const collectibleFloatEnabled = isFeatureEnabled(FEATURES.COLLECTIBLE_FLOAT, level);
+    const powerupsEnabled = isFeatureEnabled(FEATURES.POWERUPS, level);
+    collectibleSpawner.update(dt, (c) => renderer3d.onCollectibleRemoved?.(c), level, magnetTarget, baseSpeedMult, collectiblesEnabled, collectibleBonusEnabled, collectibleFloatEnabled);
+    powerupSpawner.update(dt, (p) => renderer3d.onPowerupRemoved?.(p), level, powerupsEnabled);
     particles = updateParticles(particles, dt);
 
     const collected = checkPlayerCollectibles(player, collectibleSpawner.collectibles);
@@ -182,9 +193,11 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
         if (closestObs) nearMissObstacles.add(closestObs);
         nearMissTimestamps.push(nmGameTime);
         if (nearMissTimestamps.length >= NEAR_MISS_COMBO_COUNT) {
-          onScoreUpdate?.(NEAR_MISS_COMBO_POINTS);
-          ui.showNearMissBonus?.(NEAR_MISS_COMBO_POINTS);
-          triggerHaptic('levelUp');
+          if (isFeatureEnabled(FEATURES.NEAR_MISS_COMBO, level)) {
+            onScoreUpdate?.(NEAR_MISS_COMBO_POINTS);
+            ui.showNearMissBonus?.(NEAR_MISS_COMBO_POINTS);
+            triggerHaptic('levelUp');
+          }
           nearMissTimestamps = [];
         }
       }

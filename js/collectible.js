@@ -25,6 +25,8 @@ const FLOAT_RADIUS = 25;
 
 export function createCollectibleSpawner(width, height) {
   let spawnTimer = 0;
+  let collectibleBonusEnabled = true;
+  let collectibleFloatEnabled = true;
   const collectibles = [];
 
   function getSpawnInterval(currentLevel) {
@@ -46,10 +48,10 @@ export function createCollectibleSpawner(width, height) {
     if (collectibles.length >= MAX_ON_SCREEN) return;
 
     const pos = randomSafePosition();
-    const isBonus = Math.random() < BONUS_CHANCE;
+    const isBonus = collectibleBonusEnabled && Math.random() < BONUS_CHANCE;
     const points = isBonus ? BONUS_POINTS : POINTS[Math.floor(Math.random() * POINTS.length)];
     const lifetime = isBonus ? BONUS_LIFETIME : MIN_LIFETIME + Math.random() * (MAX_LIFETIME - MIN_LIFETIME);
-    const floats = Math.random() > 0.4;
+    const floats = collectibleFloatEnabled && Math.random() > 0.4;
     const angle = Math.random() * Math.PI * 2;
 
     const color = COLOR_BY_POINTS[points] ?? 0xFFD700;
@@ -101,12 +103,16 @@ export function createCollectibleSpawner(width, height) {
       spawn(); // Spawn immediately on "Go!"
     },
     spawnInFrontOfObstacle,
-    update(dt, onExpire, level = 1, magnetTarget = null, speedMultiplier = 1) {
+    update(dt, onExpire, level = 1, magnetTarget = null, speedMultiplier = 1, collectiblesEnabled = true, bonusEnabled = true, floatEnabled = true) {
+      collectibleBonusEnabled = bonusEnabled;
+      collectibleFloatEnabled = floatEnabled;
       spawnTimer += dt;
-      const interval = getSpawnInterval(level);
-      if (spawnTimer >= interval) {
-        spawnTimer = 0;
-        spawn();
+      if (collectiblesEnabled) {
+        const interval = getSpawnInterval(level);
+        if (spawnTimer >= interval) {
+          spawnTimer = 0;
+          spawn();
+        }
       }
 
       const MAGNET_SPEED = 180;

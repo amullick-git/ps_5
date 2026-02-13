@@ -1,13 +1,19 @@
 # Dodge Run
 
-A simple browser game controlled by the PS5 DualSense controller. Move with the left stick, avoid obstacles, grab collectibles and power-ups, and survive as long as you can.
+A browser game controlled by the PS5 DualSense controller (or keyboard). Move with the left stick, avoid obstacles, grab collectibles and power-ups, and survive as long as you can. High score and best level are saved.
 
 ## Features
 
 - **Lives** — 3 lives; lose one on hit, 2s invincibility after each hit
-- **Power-ups** — Shield (block 1 hit), Slow-mo (obstacles half speed), Magnet (pull collectibles), +1 Life (rare), Clear (remove all obstacles)
-- **Collectibles** — Torus-shaped objects for 50/75/100 points
+- **Collectibles** — Rings for 50/75/100 points; some orbit, some stay static
+- **Power-ups** — Shield, Slow-mo, Magnet, +1 Life (rare), Clear (remove all obstacles)
 - **Levels** — Every 20 seconds; difficulty scales with level
+- **Boss wave** — Every 3rd level (3, 6, 9…): red pulsing screen, obstacles 2× faster, camera shake for 6 seconds
+- **Collectible in front** — 500pt green collectible spawns in front of obstacles (risky grab)
+- **Near-miss combo** — 3 near-misses within 6 seconds = +500 bonus
+- **Sudden hard obstacles** — Large bouncing obstacles that ricochet off walls
+
+Game over returns you to the Dodge Run menu; high score and best level are shown on the title screen.
 
 ## Requirements
 
@@ -48,10 +54,23 @@ The site will be at `https://<username>.github.io/ps_5/` (or your repo name).
 | **Shield** (blue) | Absorb one hit without losing a life |
 | **Slow-mo** (purple) | Obstacles move at half speed for 4s |
 | **Magnet** (cyan) | Collectibles drift toward you for 5s |
-| **+1 Life** (pink) | Add one life — rare spawn (8%) |
+| **+1 Life** (pink) | Add one life — rare spawn (5%) |
 | **Clear** (yellow) | Remove all obstacles, score points for each |
 
-Power-ups spawn about every 14 seconds; max 1 on screen. Each lasts 10 seconds.
+Power-ups spawn about every 14 seconds; max 1 on screen. Common power-ups last 4s, Life lasts 3s.
+
+## Level-based Unlocks
+
+Features unlock as you reach higher levels. Unlock levels are configurable in `js/features.js`.
+
+| Level | Features |
+|-------|----------|
+| 1 | Obstacle speed/count/spawn ramps |
+| 2 | Collectibles (rings) |
+| 3 | Power-ups, Boss wave, Collectible float (orbiting rings) |
+| 4 | 500pt bonus collectible (random), Near-miss combo |
+| 5 | 500pt collectible in front of obstacles |
+| 6 | Sudden hard obstacles (large bouncing boxes) |
 
 ## Haptic Feedback
 
