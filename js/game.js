@@ -154,6 +154,8 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
     const closest = closestObstacleDistance(player, obstacleSpawner.obstacles);
     const isNearMiss = closest < NEAR_MISS_DIST && closest > player.radius;
     const nmGameTime = obstacleSpawner.getGameTime?.() ?? 0;
+    // Prune old timestamps every frame so count and window work correctly
+    nearMissTimestamps = nearMissTimestamps.filter((t) => nmGameTime - t <= NEAR_MISS_COMBO_WINDOW);
     if (isNearMiss) {
       nearMissGlow = Math.min(1, nearMissGlow + dt * 10);
       if (!wasNearMiss && nearMissCooldown <= 0) {
@@ -161,7 +163,6 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
         triggerHaptic('nearMiss');
         nearMissCooldown = 0.4;
         nearMissTimestamps.push(nmGameTime);
-        nearMissTimestamps = nearMissTimestamps.filter((t) => nmGameTime - t <= NEAR_MISS_COMBO_WINDOW);
         if (nearMissTimestamps.length >= NEAR_MISS_COMBO_COUNT) {
           onScoreUpdate?.(NEAR_MISS_COMBO_POINTS);
           ui.showNearMissBonus?.(NEAR_MISS_COMBO_POINTS);
