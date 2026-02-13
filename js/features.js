@@ -28,6 +28,7 @@ export const FEATURE_UNLOCK_LEVEL = {
   [FEATURES.COLLECTIBLES]: 2,           // Rings (50/75/100 pts) spawn in play area
   // Level 3
   [FEATURES.COLLECTIBLE_FLOAT]: 3,      // Some collectibles orbit instead of staying static
+  [FEATURES.BONUS_PORTAL]: 3,           // Portals: enter for 15s collectibles-only bonus room
   // Level 4
   [FEATURES.POWERUPS]: 4,               // Shield, slowmo, magnet, life, clear (stars)
   // Level 5
@@ -40,8 +41,6 @@ export const FEATURE_UNLOCK_LEVEL = {
   [FEATURES.COLLECTIBLE_BONUS]: 8,      // 8% chance for 500pt random bonus ring (blinks, 2s)
   // Level 9
   [FEATURES.SUDDEN_HARD_OBSTACLES]: 9,  // 6% chance for large bouncing obstacles (80×80)
-  // Level 10
-  [FEATURES.BONUS_PORTAL]: 1,           // Portals: enter for 15s collectibles-only bonus room
 };
 
 export function isFeatureEnabled(feature, level) {

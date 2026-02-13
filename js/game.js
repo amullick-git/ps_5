@@ -153,6 +153,7 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
       particles = updateParticles(particles, dt);
       if (portalTimer <= 0) {
         portalMode = false;
+        invincibilityTimer = INVINCIBILITY_DURATION;
         portalCollectibles.forEach((c) => renderer3d.onCollectibleRemoved?.(c));
         portalCollectibles = [];
       }
