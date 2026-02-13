@@ -50,14 +50,24 @@ export function checkPlayerPowerups(player, powerups) {
 
 /** Distance from player center to closest point on obstacle. For near-miss detection. */
 export function closestObstacleDistance(player, obstacles) {
+  const result = closestObstacleAndDistance(player, obstacles);
+  return result?.distance ?? Infinity;
+}
+
+/** Returns { obstacle, distance } for the closest obstacle, or null if none. */
+export function closestObstacleAndDistance(player, obstacles) {
   let minDist = Infinity;
+  let closest = null;
   for (const o of obstacles) {
     const cx = Math.max(o.x, Math.min(player.x, o.x + o.w));
     const cy = Math.max(o.y, Math.min(player.y, o.y + o.h));
     const dx = player.x - cx;
     const dy = player.y - cy;
     const d = Math.sqrt(dx * dx + dy * dy);
-    if (d < minDist) minDist = d;
+    if (d < minDist) {
+      minDist = d;
+      closest = o;
+    }
   }
-  return minDist;
+  return closest ? { obstacle: closest, distance: minDist } : null;
 }

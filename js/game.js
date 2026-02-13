@@ -4,7 +4,7 @@
 
 import { getMovement, triggerHaptic } from './controller.js';
 import { updatePlayer } from './player.js';
-import { checkPlayerObstacles, checkPlayerCollectibles, checkPlayerPowerups, closestObstacleDistance } from './collision.js';
+import { checkPlayerObstacles, checkPlayerCollectibles, checkPlayerPowerups, closestObstacleAndDistance } from './collision.js';
 import { createParticleBurst, createCollectibleBurst, updateParticles } from './particles.js';
 import { createCollectibleSpawner } from './collectible.js';
 import { createPowerupSpawner } from './powerup.js';
@@ -45,6 +45,7 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
   let wasNearMiss = false;
   let nearMissCooldown = 0;
   let nearMissTimestamps = [];
+  const nearMissObstacles = new Set(); // Each obstacle can only count once
   let level = 1;
   let levelUpAnimTimer = 0;
   let lives = STARTING_LIVES;
@@ -151,17 +152,26 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
       onScoreUpdate?.(cleared * OBSTACLE_CLEARED_POINTS);
     }
 
-    const closest = closestObstacleDistance(player, obstacleSpawner.obstacles);
-    const isNearMiss = closest < NEAR_MISS_DIST && closest > player.radius;
+    const closestResult = closestObstacleAndDistance(player, obstacleSpawner.obstacles);
+    const closestDist = closestResult?.distance ?? Infinity;
+    const isNearMiss = closestDist < NEAR_MISS_DIST && closestDist > player.radius;
     const nmGameTime = obstacleSpawner.getGameTime?.() ?? 0;
     // Prune old timestamps every frame so count and window work correctly
     nearMissTimestamps = nearMissTimestamps.filter((t) => nmGameTime - t <= NEAR_MISS_COMBO_WINDOW);
+    // Prune nearMissObstacles: remove references to obstacles no longer in game
+    const obsSet = obstacleSpawner.obstacles;
+    for (const o of nearMissObstacles) {
+      if (!obsSet.includes(o)) nearMissObstacles.delete(o);
+    }
     if (isNearMiss) {
       nearMissGlow = Math.min(1, nearMissGlow + dt * 10);
-      if (!wasNearMiss && nearMissCooldown <= 0) {
+      const closestObs = closestResult?.obstacle;
+      const alreadyCounted = closestObs && nearMissObstacles.has(closestObs);
+      if (!wasNearMiss && nearMissCooldown <= 0 && !alreadyCounted) {
         audio.playNearMiss();
         triggerHaptic('nearMiss');
         nearMissCooldown = 0.4;
+        if (closestObs) nearMissObstacles.add(closestObs);
         nearMissTimestamps.push(nmGameTime);
         if (nearMissTimestamps.length >= NEAR_MISS_COMBO_COUNT) {
           onScoreUpdate?.(NEAR_MISS_COMBO_POINTS);
