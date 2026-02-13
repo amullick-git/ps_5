@@ -22,6 +22,8 @@ const SHAKE_DECAY = 8;
 const LEVEL_DURATION = 20; // Seconds per level
 const STARTING_LIVES = 3;
 const INVINCIBILITY_DURATION = 2;
+const BOSS_WAVE_DURATION = 6;
+const BOSS_WAVE_SPEED_MULT = 2;
 
 export function createGame(canvas, width, height, player, obstacleSpawner, onGameOver, onScoreUpdate, onLevelUp, onLivesUpdate) {
   width = width ?? canvas?.width ?? 800;
@@ -48,6 +50,7 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
   const nearMissObstacles = new Set(); // Each obstacle can only count once
   let level = 1;
   let levelUpAnimTimer = 0;
+  let bossWaveTimer = 0;
   let lives = STARTING_LIVES;
   let invincibilityTimer = 0;
   let shieldCount = 0;
@@ -110,11 +113,11 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
       }
     }
 
-    const speedMultiplier = slowmoTimer > 0 ? 0.5 : 1;
+    const baseSpeedMult = slowmoTimer > 0 ? 0.5 : (bossWaveTimer > 0 ? BOSS_WAVE_SPEED_MULT : 1);
     if (slowmoTimer > 0) slowmoTimer -= dt;
     if (magnetTimer > 0) magnetTimer -= dt;
 
-    obstacleSpawner.update(dt, level, speedMultiplier);
+    obstacleSpawner.update(dt, level, baseSpeedMult);
 
     // Level progression: level up every LEVEL_DURATION seconds
     const gameTime = obstacleSpawner.getGameTime?.() ?? 0;
@@ -122,10 +125,12 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
     if (newLevel > level) {
       level = newLevel;
       levelUpAnimTimer = 1.2;
+      if (level % 3 === 0) bossWaveTimer = BOSS_WAVE_DURATION;
       audio.playLevelUp?.();
       triggerHaptic('levelUp');
       onLevelUp?.(level);
     }
+    if (bossWaveTimer > 0) bossWaveTimer -= dt;
     if (levelUpAnimTimer > 0) levelUpAnimTimer -= dt;
     if (invincibilityTimer > 0) invincibilityTimer -= dt;
 
@@ -223,6 +228,7 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
   function render() {
     const glow = gameOverAnimTimer > 0 ? 0 : nearMissGlow;
     const invincibleBlink = invincibilityTimer > 0;
+    const bossWaveActive = bossWaveTimer > 0;
     renderer3d.render(
       player,
       obstacleSpawner.obstacles,
@@ -234,7 +240,8 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
       false,
       invincibleBlink,
       powerupSpawner.powerups,
-      shieldCount > 0
+      shieldCount > 0,
+      bossWaveActive
     );
   }
 

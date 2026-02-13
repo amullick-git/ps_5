@@ -13,7 +13,7 @@ function to3D(x, y) {
   return [(x - CENTER_X) / SCALE, (y - CENTER_Y) / SCALE];
 }
 
-let scene, camera, renderer;
+let scene, camera, renderer, groundMesh;
 let playerMesh, particleMeshes = [];
 let obstacleMeshes = new Set();
 let collectibleMeshes = new Set();
@@ -59,13 +59,13 @@ export function init(canvas, width, height) {
   camera.position.set(0, 4, 3.5);
   camera.lookAt(0, 0, 0);
 
-  const ground = new THREE.Mesh(
+  groundMesh = new THREE.Mesh(
     new THREE.PlaneGeometry(16, 14),
     new THREE.MeshStandardMaterial({ color: 0x1a1a2e })
   );
-  ground.rotation.x = -Math.PI / 2;
-  ground.position.y = -0.01;
-  scene.add(ground);
+  groundMesh.rotation.x = -Math.PI / 2;
+  groundMesh.position.y = -0.01;
+  scene.add(groundMesh);
 
   const ambient = new THREE.AmbientLight(0x505070);
   scene.add(ambient);
@@ -92,8 +92,14 @@ export function renderBackground() {
   renderer.render(scene, camera);
 }
 
-export function render(player, obstacles, collectibles, particles, shakeX, shakeY, nearMissGlow, hideObstacles = false, invincibleBlink = false, powerups = [], hasShield = false) {
+const NORMAL_BG = 0x1a1a2e;
+const BOSS_BG = 0x2a1414;
+
+export function render(player, obstacles, collectibles, particles, shakeX, shakeY, nearMissGlow, hideObstacles = false, invincibleBlink = false, powerups = [], hasShield = false, bossWaveActive = false) {
   if (!scene || !camera || !renderer) return;
+
+  if (scene.background) scene.background.setHex(bossWaveActive ? BOSS_BG : NORMAL_BG);
+  if (groundMesh?.material?.color) groundMesh.material.color.setHex(bossWaveActive ? BOSS_BG : NORMAL_BG);
 
   const [px, pz] = to3D(player.x, player.y);
   playerMesh.position.set(px, 0.2, pz);
