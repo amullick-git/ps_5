@@ -74,6 +74,21 @@ export function hideLevelUp() {
   if (el) el.classList.add('hidden');
 }
 
+export function showFeatureUnlocked(featureLabels) {
+  if (!featureLabels || featureLabels.length === 0) return;
+  const el = document.getElementById('feature-unlock-overlay');
+  const textEl = document.getElementById('feature-unlock-text');
+  if (!el || !textEl) return;
+  textEl.textContent = featureLabels.join(' • ');
+  el.classList.remove('hidden');
+  el.classList.add('feature-unlock-visible');
+  clearTimeout(el._featureUnlockTimeout);
+  el._featureUnlockTimeout = setTimeout(() => {
+    el.classList.add('hidden');
+    el.classList.remove('feature-unlock-visible');
+  }, 2000);
+}
+
 export function showMenu() {
   document.getElementById('menu-screen').classList.remove('hidden');
   document.getElementById('hud').classList.add('hidden');
@@ -81,6 +96,7 @@ export function showMenu() {
   document.getElementById('paused-overlay').classList.add('hidden');
   document.getElementById('countdown-overlay')?.classList.add('hidden');
   document.getElementById('level-up-overlay')?.classList.add('hidden');
+  document.getElementById('feature-unlock-overlay')?.classList.add('hidden');
   document.getElementById('points-popup')?.classList.add('hidden');
   document.getElementById('near-miss-bonus')?.classList.add('hidden');
   const bestEl = document.getElementById('menu-best');
@@ -104,6 +120,7 @@ export function showGameOver(score, highScore, highLevel = 1) {
   document.getElementById('paused-overlay').classList.add('hidden');
   document.getElementById('countdown-overlay')?.classList.add('hidden');
   document.getElementById('level-up-overlay')?.classList.add('hidden');
+  document.getElementById('feature-unlock-overlay')?.classList.add('hidden');
   document.getElementById('points-popup')?.classList.add('hidden');
   document.getElementById('near-miss-bonus')?.classList.add('hidden');
   document.getElementById('game-over-screen').classList.remove('hidden');

@@ -8,7 +8,7 @@ import { checkPlayerObstacles, checkPlayerCollectibles, checkPlayerPowerups, clo
 import { createParticleBurst, createCollectibleBurst, updateParticles } from './particles.js';
 import { createCollectibleSpawner } from './collectible.js';
 import { createPowerupSpawner } from './powerup.js';
-import { FEATURES, isFeatureEnabled } from './features.js';
+import { FEATURES, isFeatureEnabled, getFeaturesUnlockedAtLevel, FEATURE_LABELS } from './features.js';
 import * as audio from './audio.js';
 import * as renderer3d from './renderer3d.js';
 import * as ui from './ui.js';
@@ -139,6 +139,11 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
       audio.playLevelUp?.();
       triggerHaptic('levelUp');
       onLevelUp?.(level);
+      const unlocked = getFeaturesUnlockedAtLevel(level);
+      if (unlocked.length > 0) {
+        const labels = unlocked.map((f) => FEATURE_LABELS[f]).filter(Boolean);
+        setTimeout(() => ui.showFeatureUnlocked?.(labels), 500);
+      }
     }
     if (bossWaveTimer > 0) bossWaveTimer -= dt;
     if (levelUpAnimTimer > 0) levelUpAnimTimer -= dt;

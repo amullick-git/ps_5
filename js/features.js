@@ -26,18 +26,41 @@ export const FEATURE_UNLOCK_LEVEL = {
   // Level 2
   [FEATURES.COLLECTIBLES]: 2,           // Rings (50/75/100 pts) spawn in play area
   // Level 3
-  [FEATURES.POWERUPS]: 3,               // Shield, slowmo, magnet, life, clear (stars)
-  [FEATURES.BOSS_WAVE]: 3,              // Every 3rd level: red screen, 2× speed, 6s
   [FEATURES.COLLECTIBLE_FLOAT]: 3,      // Some collectibles orbit instead of staying static
   // Level 4
-  [FEATURES.COLLECTIBLE_BONUS]: 4,      // 8% chance for 500pt random bonus ring (blinks, 2s)
-  [FEATURES.NEAR_MISS_COMBO]: 4,        // 3 near-misses in 6s = +500 bonus
+  [FEATURES.POWERUPS]: 4,               // Shield, slowmo, magnet, life, clear (stars)
   // Level 5
-  [FEATURES.COLLECTIBLE_IN_FRONT]: 5,   // 500pt collectible spawns in front of obstacles (8%)
+  [FEATURES.BOSS_WAVE]: 5,              // Every 3rd level: red screen, 2× speed, 6s
   // Level 6
-  [FEATURES.SUDDEN_HARD_OBSTACLES]: 6,  // 6% chance for large bouncing obstacles (80×80)
+  [FEATURES.NEAR_MISS_COMBO]: 6,        // 3 near-misses in 6s = +500 bonus
+  [FEATURES.COLLECTIBLE_IN_FRONT]: 6,   // 500pt collectible spawns in front of obstacles (8%)
+  // Level 8
+  [FEATURES.COLLECTIBLE_BONUS]: 8,      // 8% chance for 500pt random bonus ring (blinks, 2s)
+  [FEATURES.SUDDEN_HARD_OBSTACLES]: 8,  // 6% chance for large bouncing obstacles (80×80)
 };
 
 export function isFeatureEnabled(feature, level) {
   return level >= (FEATURE_UNLOCK_LEVEL[feature] ?? 1);
+}
+
+/** Human-readable labels for feature unlock announcements. */
+export const FEATURE_LABELS = {
+  [FEATURES.COLLECTIBLES]: 'Collectibles',
+  [FEATURES.POWERUPS]: 'Power-ups',
+  [FEATURES.OBSTACLE_SPEED_RAMP]: 'Obstacle speed ramp',
+  [FEATURES.OBSTACLE_COUNT_RAMP]: 'Obstacle count ramp',
+  [FEATURES.OBSTACLE_SPAWN_RAMP]: 'Obstacle spawn ramp',
+  [FEATURES.BOSS_WAVE]: 'Boss wave',
+  [FEATURES.COLLECTIBLE_IN_FRONT]: 'Collectible in front',
+  [FEATURES.COLLECTIBLE_BONUS]: '500pt bonus collectible',
+  [FEATURES.COLLECTIBLE_FLOAT]: 'Collectible float',
+  [FEATURES.NEAR_MISS_COMBO]: 'Near-miss combo',
+  [FEATURES.SUDDEN_HARD_OBSTACLES]: 'Sudden hard obstacles',
+};
+
+/** Returns feature keys that unlock exactly at the given level. */
+export function getFeaturesUnlockedAtLevel(level) {
+  return Object.keys(FEATURE_UNLOCK_LEVEL).filter(
+    (f) => FEATURE_UNLOCK_LEVEL[f] === level
+  );
 }
