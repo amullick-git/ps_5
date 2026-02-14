@@ -24,8 +24,8 @@ export const FEATURE_UNLOCK_LEVEL = {
   [FEATURES.OBSTACLE_SPEED_RAMP]: 1,    // Obstacles move faster as level increases
   [FEATURES.OBSTACLE_COUNT_RAMP]: 1,    // Max obstacles on screen ramps 6 → 18
   [FEATURES.OBSTACLE_SPAWN_RAMP]: 1,    // Obstacle spawn interval shortens with level
+  [FEATURES.COLLECTIBLES]: 1,           // Rings (50/75/100 pts) spawn in play area
   // Level 2
-  [FEATURES.COLLECTIBLES]: 2,           // Rings (50/75/100 pts) spawn in play area
   // Level 3
   [FEATURES.COLLECTIBLE_FLOAT]: 3,      // Some collectibles orbit instead of staying static
   [FEATURES.BONUS_PORTAL]: 3,           // Portals: enter for 15s collectibles-only bonus room
