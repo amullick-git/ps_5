@@ -39,7 +39,7 @@ export const FEATURE_UNLOCK_LEVEL = {
   // Level 7
   [FEATURES.COLLECTIBLE_IN_FRONT]: 7,   // 500pt collectible spawns in front of obstacles (8%)
   // Level 8
-  [FEATURES.COLLECTIBLE_BONUS]: 8,      // 8% chance for 500pt random bonus ring (blinks, 2s)
+  [FEATURES.COLLECTIBLE_BONUS]: 8,      // 4% chance for 500pt random bonus ring (blinks, 2s)
   // Level 9
 };
 
