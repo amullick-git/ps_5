@@ -249,7 +249,7 @@ body {
   white-space: nowrap;
 }
 
-#powerup-hud-legend .pu-shield { color: #2196F3; }
+#powerup-hud-legend .pu-shield { color: #E8E8E8; }
 #powerup-hud-legend .pu-slowmo { color: #9C27B0; }
 #powerup-hud-legend .pu-magnet { color: #00BCD4; }
 #powerup-hud-legend .pu-life { color: #E91E63; }
@@ -309,7 +309,7 @@ body {
   cursor: help;
 }
 
-#powerup-legend .pu-shield { color: #2196F3; }
+#powerup-legend .pu-shield { color: #E8E8E8; }
 #powerup-legend .pu-slowmo { color: #9C27B0; }
 #powerup-legend .pu-magnet { color: #00BCD4; }
 #powerup-legend .pu-life { color: #E91E63; }

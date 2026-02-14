@@ -338,7 +338,7 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
       false,
       invincibleBlink,
       portalMode ? [] : powerupSpawner.powerups,
-      invincibilityTimer > 0,
+      false,
       bossWaveActive,
       portalMode ? [] : portalSpawner.portals,
       portalMode

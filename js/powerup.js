@@ -8,7 +8,7 @@ const SPAWN_INTERVAL = 14;
 const LIFETIME = 4;
 
 export const POWERUP_TYPES = {
-  SHIELD: { id: 'shield', color: 0x2196F3, label: 'Shield' },
+  SHIELD: { id: 'shield', color: 0xE8E8E8, label: 'Shield' },
   SLOWMO: { id: 'slowmo', color: 0x9C27B0, label: 'Slow-mo' },
   MAGNET: { id: 'magnet', color: 0x00BCD4, label: 'Magnet' },
   LIFE: { id: 'life', color: 0xE91E63, label: '+1 Life' },
