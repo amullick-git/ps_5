@@ -235,10 +235,12 @@ body {
 
 #powerup-hud-legend {
   position: absolute;
-  bottom: 0.5rem;
-  left: 1rem;
+  bottom: 2.25rem;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 0.5rem 1rem;
   font-size: 0.75rem;
   color: rgba(255, 255, 255, 0.7);
