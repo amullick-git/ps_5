@@ -234,15 +234,14 @@ body {
 }
 
 #powerup-hud-legend {
-  order: 11;
-  flex-basis: 100%;
+  position: absolute;
+  bottom: 0.5rem;
+  left: 1rem;
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
   gap: 0.5rem 1rem;
   font-size: 0.75rem;
   color: rgba(255, 255, 255, 0.7);
-  margin-top: 0.25rem;
 }
 
 #powerup-hud-legend span {
