@@ -21,11 +21,22 @@
         <h1>Dodge Run</h1>
         <p class="menu-tagline">Dodge • Survive • Score</p>
         <p id="menu-best" class="menu-best">Best: 0 — Best level: 1</p>
+        <div id="menu-last-game" class="hidden">
+          <p id="menu-last-score" class="menu-last-label">Score: 0</p>
+          <p id="menu-last-level" class="menu-last-label">Level: 1</p>
+          <div id="menu-score-card" class="menu-score-card">
+            <span id="msc-survival" class="sc-item"><span class="sc-icon">⏱</span><span class="sc-val">0</span></span>
+            <span id="msc-clear" class="sc-item"><span class="sc-icon">✓</span><span class="sc-val">0</span></span>
+            <span id="msc-rings" class="sc-item"><span class="sc-icon">◎</span><span class="sc-val">0</span></span>
+            <span id="msc-bonus500" class="sc-item pts-500"><span class="sc-icon">★</span><span class="sc-val">0</span></span>
+            <span id="msc-nearMiss" class="sc-item pts-500"><span class="sc-icon">⚡</span><span class="sc-val">0</span></span>
+          </div>
+        </div>
         <p>Use the left stick to move. Avoid obstacles (boxes), grab collectibles (rings) and power-ups (stars)!</p>
         <div id="powerup-legend">
-          <span class="pu-shield" title="Block 1 hit">🛡 Blue = Shield</span>
-          <span class="pu-slowmo" title="Obstacles half speed 4s">⏱ Purple = Slow-mo</span>
-          <span class="pu-magnet" title="Pull collectibles 5s">🧲 Cyan = Magnet</span>
+          <span class="pu-shield" title="Invincibility 5s">🛡 Blue = Shield</span>
+          <span class="pu-slowmo" title="Obstacles half speed 8s">⏱ Purple = Slow-mo</span>
+          <span class="pu-magnet" title="Pull collectibles 10s">🧲 Cyan = Magnet</span>
           <span class="pu-life" title="+1 life">♥ Pink = +1 Life</span>
           <span class="pu-clear" title="Clear obstacles">✕ Yellow = Clear</span>
         </div>
@@ -33,18 +44,26 @@
         <p class="controller-hint">Connect your PS5 controller for the best experience</p>
       </div>
       <div id="hud" class="hidden">
-        <div id="score-display">Score: 0</div>
+        <div id="score-section">
+          <div id="score-display">Score: 0</div>
+          <div id="score-card">
+            <span id="sc-survival" title="10 pts/sec" class="sc-item"><span class="sc-icon">⏱</span><span class="sc-val">0</span></span>
+            <span id="sc-clear" title="25 pts per obstacle cleared" class="sc-item"><span class="sc-icon">✓</span><span class="sc-val">0</span></span>
+            <span id="sc-rings" title="Rings 50/75/100" class="sc-item"><span class="sc-icon">◎</span><span class="sc-val">0</span></span>
+            <span id="sc-bonus500" title="500pt bonus or in-front" class="sc-item pts-500"><span class="sc-icon">★</span><span class="sc-val">0</span></span>
+            <span id="sc-nearMiss" title="3 near misses" class="sc-item pts-500"><span class="sc-icon">⚡</span><span class="sc-val">0</span></span>
+          </div>
+        </div>
         <div id="level-display">Level 1</div>
         <div id="lives-display">♥ 3</div>
         <div id="near-miss-display" title="3 near misses in 6s = +500 bonus">Near: 0/3</div>
-        <div id="shield-display" class="hidden">🛡 1</div>
         <div id="hud-right">
           <span id="high-score-display">Best: 0</span>
           <span id="high-level-display">Best Lvl: 1</span>
         </div>
         <div id="pause-hint">Options, Esc or P to pause</div>
         <div id="powerup-hud-legend">
-          <span class="pu-shield" title="Block 1 hit">🛡 Shield</span>
+          <span class="pu-shield" title="Invincibility 5s">🛡 Shield</span>
           <span class="pu-slowmo" title="Obstacles half speed">⏱ Slow</span>
           <span class="pu-magnet" title="Pull collectibles">🧲 Magnet</span>
           <span class="pu-life" title="+1 life">♥ Life</span>

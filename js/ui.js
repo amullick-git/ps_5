@@ -101,7 +101,7 @@ export function showFeatureUnlocked(featureLabels) {
   }, 2000);
 }
 
-export function showMenu() {
+export function showMenu(lastScore, lastLevel, lastBreakdown) {
   document.getElementById('menu-screen').classList.remove('hidden');
   document.getElementById('hud').classList.add('hidden');
   document.getElementById('game-over-screen').classList.add('hidden');
@@ -114,6 +114,29 @@ export function showMenu() {
   document.getElementById('near-miss-bonus')?.classList.add('hidden');
   const bestEl = document.getElementById('menu-best');
   if (bestEl) bestEl.textContent = `Best: ${getHighScore()} — Best level: ${getHighLevel()}`;
+
+  const lastGameEl = document.getElementById('menu-last-game');
+  if (lastGameEl) {
+    if (lastScore != null && lastLevel != null) {
+      const scoreEl = document.getElementById('menu-last-score');
+      const levelEl = document.getElementById('menu-last-level');
+      if (scoreEl) scoreEl.textContent = `Score: ${lastScore}`;
+      if (levelEl) levelEl.textContent = `Level: ${lastLevel}`;
+      if (lastBreakdown) {
+        const map = [
+          ['msc-survival', 'survival'], ['msc-clear', 'clear'], ['msc-rings', 'rings'],
+          ['msc-bonus500', 'bonus500'], ['msc-nearMiss', 'nearMiss'],
+        ];
+        for (const [id, key] of map) {
+          const val = document.getElementById(id)?.querySelector('.sc-val');
+          if (val) val.textContent = lastBreakdown[key] ?? 0;
+        }
+      }
+      lastGameEl.classList.remove('hidden');
+    } else {
+      lastGameEl.classList.add('hidden');
+    }
+  }
 }
 
 export function showPlaying(score, highScore, highLevel = 1, lives = 3) {
@@ -186,20 +209,25 @@ export function updateLives(lives) {
   if (el) el.textContent = `♥ ${lives}`;
 }
 
+export function updateScoreCard(breakdown) {
+  if (!breakdown) return;
+  const map = [
+    ['sc-survival', 'survival'],
+    ['sc-clear', 'clear'],
+    ['sc-rings', 'rings'],
+    ['sc-bonus500', 'bonus500'],
+    ['sc-nearMiss', 'nearMiss'],
+  ];
+  for (const [id, key] of map) {
+    const el = document.getElementById(id);
+    const val = el?.querySelector('.sc-val');
+    if (val) val.textContent = breakdown[key] ?? 0;
+  }
+}
+
 export function updateNearMissCount(count) {
   const el = document.getElementById('near-miss-display');
   if (el) el.textContent = `Near: ${count}/3`;
-}
-
-export function updateShield(count) {
-  const el = document.getElementById('shield-display');
-  if (!el) return;
-  if (count > 0) {
-    el.textContent = `🛡 ${count}`;
-    el.classList.remove('hidden');
-  } else {
-    el.classList.add('hidden');
-  }
 }
 
 export function showSoundHint() {

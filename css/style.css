@@ -93,6 +93,52 @@ body {
   opacity: 0.95;
 }
 
+#menu-last-game {
+  margin: 0.75rem 0 0.5rem;
+  padding: 0.75rem 1rem;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 217, 255, 0.25);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+#menu-last-game .menu-last-label {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #EEEEEE;
+  margin-bottom: 0;
+}
+
+.menu-score-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.menu-score-card .sc-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.menu-score-card .sc-icon {
+  font-size: 0.95em;
+}
+
+.menu-score-card .sc-val {
+  font-weight: 600;
+  min-width: 1.5em;
+}
+
+.menu-score-card .pts-500 {
+  color: #00FF88;
+}
+
 #menu-screen p,
 #game-over-screen p {
   color: #EEEEEE;
@@ -130,11 +176,13 @@ body {
   top: 0;
   left: 0;
   width: 100%;
+  height: 100%;
   padding: 1rem;
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: flex-start;
+  align-content: flex-start;
   gap: 0.5rem 1rem;
 }
 
@@ -163,12 +211,6 @@ body {
   font-weight: 600;
 }
 
-#shield-display {
-  color: #2196F3;
-  font-size: 1.1rem;
-  font-weight: 600;
-}
-
 #score-display,
 #high-score-display {
   color: #EEEEEE;
@@ -182,12 +224,13 @@ body {
 }
 
 #pause-hint {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
   color: #888;
   font-size: 0.85rem;
-  order: 10;
-  flex-basis: 100%;
   text-align: center;
-  margin-top: 0.25rem;
 }
 
 #powerup-hud-legend {
@@ -211,6 +254,46 @@ body {
 #powerup-hud-legend .pu-magnet { color: #00BCD4; }
 #powerup-hud-legend .pu-life { color: #E91E63; }
 #powerup-hud-legend .pu-clear { color: #FFEB3B; }
+
+#score-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+#score-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.4rem 0.6rem;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(0, 217, 255, 0.2);
+  border-radius: 6px;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+  max-width: fit-content;
+}
+
+#score-card .sc-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+}
+
+#score-card .sc-icon {
+  font-size: 0.9em;
+  opacity: 0.9;
+}
+
+#score-card .sc-val {
+  font-weight: 600;
+  min-width: 1.2em;
+}
+
+#score-card .pts-500 {
+  color: #00FF88;
+}
 
 #powerup-legend {
   display: flex;

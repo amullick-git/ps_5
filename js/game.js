@@ -67,8 +67,8 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
   let levelUpAnimTimer = 0;
   let bossWaveTimer = 0;
   let lives = STARTING_LIVES;
+  const SHIELD_INVINCIBILITY_DURATION = 5;
   let invincibilityTimer = 0;
-  let shieldCount = 0;
   let slowmoTimer = 0;
   let magnetTimer = 0;
 
@@ -145,7 +145,7 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
         audio.playCollect();
         triggerHaptic('collect');
         ui.showPointsPopup?.(c.points, c.x, c.y);
-        onScoreUpdate?.(c.points);
+        onScoreUpdate?.(c.points, c.points === 500 ? 'bonus500' : 'rings');
         particles = particles.concat(createCollectibleBurst(c.x, c.y, c.color));
         renderer3d.onCollectibleRemoved?.(c);
         portalCollectibles.splice(portalCollectibles.indexOf(c), 1);
@@ -173,15 +173,15 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
       renderer3d.onPowerupRemoved?.(p);
       const idx = powerupSpawner.powerups.indexOf(p);
       if (idx >= 0) powerupSpawner.powerups.splice(idx, 1);
-      if (p.type === 'shield') shieldCount++;
-      else if (p.type === 'slowmo') slowmoTimer = 4;
-      else if (p.type === 'magnet') magnetTimer = 5;
+      if (p.type === 'shield') invincibilityTimer = Math.max(invincibilityTimer, SHIELD_INVINCIBILITY_DURATION);
+      else if (p.type === 'slowmo') slowmoTimer = 8;
+      else if (p.type === 'magnet') magnetTimer = 10;
       else if (p.type === 'life') { lives++; onLivesUpdate?.(lives); }
       else if (p.type === 'clear') {
         const n = obstacleSpawner.obstacles.length;
         obstacleSpawner.obstacles.forEach((o) => onObstacleRemoved(o));
         obstacleSpawner.obstacles.length = 0;
-        onScoreUpdate?.(n * OBSTACLE_CLEARED_POINTS);
+        onScoreUpdate?.(n * OBSTACLE_CLEARED_POINTS, 'clear');
       }
     }
 
@@ -245,7 +245,7 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
       audio.playCollect();
       triggerHaptic('collect');
       ui.showPointsPopup?.(c.points, c.x, c.y);
-      onScoreUpdate?.(c.points);
+      onScoreUpdate?.(c.points, c.points === 500 ? 'bonus500' : 'rings');
       particles = particles.concat(createCollectibleBurst(c.x, c.y, c.color));
       renderer3d.onCollectibleRemoved?.(c);
       const idx = collectibleSpawner.collectibles.indexOf(c);
@@ -255,7 +255,7 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
     const cleared = obstacleSpawner.removeOutside(width, height, onObstacleRemoved);
     if (cleared > 0) {
       audio.playPass();
-      onScoreUpdate?.(cleared * OBSTACLE_CLEARED_POINTS);
+      onScoreUpdate?.(cleared * OBSTACLE_CLEARED_POINTS, 'clear');
     }
 
     const closestResult = closestObstacleAndDistance(player, obstacleSpawner.obstacles);
@@ -281,7 +281,7 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
         nearMissTimestamps.push(nmGameTime);
         if (nearMissTimestamps.length >= NEAR_MISS_COMBO_COUNT) {
           if (isFeatureEnabled(FEATURES.NEAR_MISS_COMBO, level)) {
-            onScoreUpdate?.(NEAR_MISS_COMBO_POINTS);
+            onScoreUpdate?.(NEAR_MISS_COMBO_POINTS, 'nearMiss');
             ui.showNearMissBonus?.(NEAR_MISS_COMBO_POINTS);
             triggerHaptic('levelUp');
           }
@@ -299,7 +299,7 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
     if (survivalAccum >= 1) {
       const secs = Math.floor(survivalAccum);
       survivalAccum -= secs;
-      onScoreUpdate?.(secs * SURVIVAL_POINTS_PER_SEC);
+      onScoreUpdate?.(secs * SURVIVAL_POINTS_PER_SEC, 'survival');
     }
 
     if (invincibilityTimer <= 0 && checkPlayerObstacles(player, obstacleSpawner.obstacles)) {
@@ -308,17 +308,12 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
       particles = createParticleBurst(player.x, player.y);
       shakeX = shakeY = 20;
       nearMissGlow = 0;
-      if (shieldCount > 0) {
-        shieldCount--;
-        invincibilityTimer = INVINCIBILITY_DURATION;
+      lives--;
+      onLivesUpdate?.(lives);
+      if (lives <= 0) {
+        gameOverAnimTimer = 0.5;
       } else {
-        lives--;
-        onLivesUpdate?.(lives);
-        if (lives <= 0) {
-          gameOverAnimTimer = 0.5;
-        } else {
-          invincibilityTimer = INVINCIBILITY_DURATION;
-        }
+        invincibilityTimer = INVINCIBILITY_DURATION;
       }
     }
 
@@ -343,7 +338,7 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
       false,
       invincibleBlink,
       portalMode ? [] : powerupSpawner.powerups,
-      shieldCount > 0,
+      invincibilityTimer > 0,
       bossWaveActive,
       portalMode ? [] : portalSpawner.portals,
       portalMode
@@ -358,7 +353,7 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
     getLevel: () => level,
     getLevelUpAnimTimer: () => levelUpAnimTimer,
     getLives: () => lives,
-    getShieldCount: () => shieldCount,
+    getInvincibilityTimer: () => invincibilityTimer,
     getNearMissComboCount: () => nearMissTimestamps.length,
     getPortalMode: () => portalMode,
     getPortalTimer: () => portalTimer,

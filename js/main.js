@@ -26,6 +26,7 @@ const obstacleSpawner = createObstacleSpawner(WIDTH, HEIGHT);
 
 let state = 'MENU';
 let score = 0;
+let scoreBreakdown = { survival: 0, clear: 0, rings: 0, bonus500: 0, nearMiss: 0 };
 let highScore = ui.getHighScore();
 let highLevel = ui.getHighLevel();
 let gameInstance = null;
@@ -37,22 +38,28 @@ let activatedAt = 0;
 function startPlaying() {
   state = 'PLAYING';
   score = 0;
+  scoreBreakdown = { survival: 0, clear: 0, rings: 0, bonus500: 0, nearMiss: 0 };
   resetPlayer(player, WIDTH, HEIGHT);
   highScore = ui.getHighScore();
   highLevel = ui.getHighLevel();
   ui.showPlaying(score, highScore, highLevel, 3);
+  ui.updateScoreCard?.(scoreBreakdown);
   gameInstance = createGame(canvas, WIDTH, HEIGHT, player, obstacleSpawner, onGameOver, addScore, onLevelUp, onLivesUpdate);
   // BGM starts after countdown (handled in game loop)
 }
 
-function addScore(points) {
+function addScore(points, category = '') {
   score += points;
+  if (category && scoreBreakdown[category] !== undefined) {
+    scoreBreakdown[category] += points;
+  }
   if (score > highScore) {
     highScore = score;
     ui.setHighScore(highScore);
   }
   ui.updateScore(score);
   ui.updateHighScore(highScore);
+  ui.updateScoreCard?.(scoreBreakdown);
 }
 
 function onGameOver() {
@@ -64,7 +71,7 @@ function onGameOver() {
     highLevel = level;
     ui.setHighLevel(highLevel);
   }
-  ui.showMenu();
+  ui.showMenu(score, level, scoreBreakdown);
 }
 
 function onLivesUpdate(lives) {
@@ -125,7 +132,6 @@ function loop(timestamp) {
     ui.updateLevel(gameInstance.getLevel?.() ?? 1);
     ui.updateLives(gameInstance.getLives?.() ?? 3);
     ui.updateNearMissCount(gameInstance.getNearMissComboCount?.() ?? 0);
-    ui.updateShield(gameInstance.getShieldCount?.() ?? 0);
     ui.updatePortalTimer?.(gameInstance.getPortalTimer?.() ?? 0);
     if (gameInstance.getCountdownTimer?.() > 0) {
       ui.showCountdown(gameInstance.getCountdownPhase(), gameInstance.getCountdownTimer());
