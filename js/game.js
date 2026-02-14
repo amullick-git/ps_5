@@ -29,7 +29,7 @@ const BOSS_WAVE_SPEED_MULT = 2;
 const PORTAL_BONUS_DURATION = 10;
 const PORTAL_COLLECTIBLE_SPAWN_INTERVAL = 0.45;
 const PORTAL_COLLECTIBLE_MAX = 12;
-const PORTAL_COLLECTIBLE_DRIFT_SPEED = 45;
+const PORTAL_COLLECTIBLE_DRIFT_SPEED = 85;
 
 export function createGame(canvas, width, height, player, obstacleSpawner, onGameOver, onScoreUpdate, onLevelUp, onLivesUpdate, options = {}) {
   width = width ?? canvas?.width ?? 800;
@@ -126,11 +126,10 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
       if (portalCollectibleSpawnTimer >= PORTAL_COLLECTIBLE_SPAWN_INTERVAL && portalCollectibles.length < PORTAL_COLLECTIBLE_MAX) {
         portalCollectibleSpawnTimer = 0;
         const pts = PORTAL_POINTS[Math.floor(Math.random() * PORTAL_POINTS.length)];
-        const spawnRadius = 40;
-        const angle = Math.random() * Math.PI * 2;
+        const pad = 50;
         portalCollectibles.push({
-          x: portalCenterX + Math.cos(angle) * spawnRadius * (0.3 + Math.random() * 0.7),
-          y: portalCenterY + Math.sin(angle) * spawnRadius * (0.3 + Math.random() * 0.7),
+          x: pad + Math.random() * (width - pad * 2),
+          y: pad + Math.random() * (height - pad * 2),
           radius: 18,
           points: pts,
           color: PORTAL_COLORS[pts],
