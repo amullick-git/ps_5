@@ -28,7 +28,7 @@ export const FEATURE_UNLOCK_LEVEL = {
   // Level 2
   // Level 3
   [FEATURES.COLLECTIBLE_FLOAT]: 3,      // Some collectibles orbit instead of staying static
-  [FEATURES.BONUS_PORTAL]: 3,           // Portals: enter for 15s collectibles-only bonus room
+  [FEATURES.BONUS_PORTAL]: 3,           // Portals: enter for 10s collectibles-only bonus room
   // Level 4
   [FEATURES.POWERUPS]: 4,               // Shield, slowmo, magnet, life, clear (stars)
   // Level 5

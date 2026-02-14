@@ -1,5 +1,5 @@
 /**
- * Bonus portals — enter for 15s collectibles-only bonus room.
+ * Bonus portals — enter for 10s collectibles-only bonus room.
  * Spawn occasionally; one on screen at a time; disappear after lifetime if not entered.
  */
 

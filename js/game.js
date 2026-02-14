@@ -26,7 +26,7 @@ const STARTING_LIVES = 3;
 const INVINCIBILITY_DURATION = 2;
 const BOSS_WAVE_DURATION = 6;
 const BOSS_WAVE_SPEED_MULT = 2;
-const PORTAL_BONUS_DURATION = 15;
+const PORTAL_BONUS_DURATION = 10;
 const PORTAL_COLLECTIBLE_SPAWN_INTERVAL = 0.45;
 const PORTAL_COLLECTIBLE_MAX = 12;
 
@@ -106,7 +106,7 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
 
     const movement = getMovement();
 
-    // Portal bonus mode — collectibles only for 15s, obstacles block (no damage)
+    // Portal bonus mode — collectibles only for 10s, obstacles block (no damage)
     if (portalMode) {
       const prevX = player.x;
       const prevY = player.y;
