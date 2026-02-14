@@ -29,18 +29,18 @@ export const FEATURE_UNLOCK_LEVEL = {
   // Level 3
   [FEATURES.COLLECTIBLE_FLOAT]: 3,      // Some collectibles orbit instead of staying static
   [FEATURES.BONUS_PORTAL]: 3,           // Portals: enter for 10s collectibles-only bonus room
+  [FEATURES.NEAR_MISS_COMBO]: 3,        // 3 near-misses in 6s = +500 bonus
   // Level 4
+  [FEATURES.SUDDEN_HARD_OBSTACLES]: 4,  // 6% chance for large bouncing obstacles (80×80)
   [FEATURES.POWERUPS]: 4,               // Shield, slowmo, magnet, life, clear (stars)
   // Level 5
   [FEATURES.BOSS_WAVE]: 5,              // Every 3rd level: red screen, 2× speed, 6s
   // Level 6
-  [FEATURES.NEAR_MISS_COMBO]: 6,        // 3 near-misses in 6s = +500 bonus
   // Level 7
   [FEATURES.COLLECTIBLE_IN_FRONT]: 7,   // 500pt collectible spawns in front of obstacles (8%)
   // Level 8
   [FEATURES.COLLECTIBLE_BONUS]: 8,      // 8% chance for 500pt random bonus ring (blinks, 2s)
   // Level 9
-  [FEATURES.SUDDEN_HARD_OBSTACLES]: 9,  // 6% chance for large bouncing obstacles (80×80)
 };
 
 export function isFeatureEnabled(feature, level) {
