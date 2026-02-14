@@ -29,6 +29,7 @@ const BOSS_WAVE_SPEED_MULT = 2;
 const PORTAL_BONUS_DURATION = 10;
 const PORTAL_COLLECTIBLE_SPAWN_INTERVAL = 0.45;
 const PORTAL_COLLECTIBLE_MAX = 12;
+const PORTAL_COLLECTIBLE_DRIFT_SPEED = 45;
 
 export function createGame(canvas, width, height, player, obstacleSpawner, onGameOver, onScoreUpdate, onLevelUp, onLivesUpdate, options = {}) {
   width = width ?? canvas?.width ?? 800;
@@ -52,6 +53,8 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
   let survivalAccum = 0;
   let portalMode = false;
   let portalTimer = 0;
+  let portalCenterX = 0;
+  let portalCenterY = 0;
   let portalCollectibles = [];
   let portalCollectibleSpawnTimer = 0;
   let countdownTimer = 3.5;
@@ -123,10 +126,11 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
       if (portalCollectibleSpawnTimer >= PORTAL_COLLECTIBLE_SPAWN_INTERVAL && portalCollectibles.length < PORTAL_COLLECTIBLE_MAX) {
         portalCollectibleSpawnTimer = 0;
         const pts = PORTAL_POINTS[Math.floor(Math.random() * PORTAL_POINTS.length)];
-        const pad = 50;
+        const spawnRadius = 40;
+        const angle = Math.random() * Math.PI * 2;
         portalCollectibles.push({
-          x: pad + Math.random() * (width - pad * 2),
-          y: pad + Math.random() * (height - pad * 2),
+          x: portalCenterX + Math.cos(angle) * spawnRadius * (0.3 + Math.random() * 0.7),
+          y: portalCenterY + Math.sin(angle) * spawnRadius * (0.3 + Math.random() * 0.7),
           radius: 18,
           points: pts,
           color: PORTAL_COLORS[pts],
@@ -135,8 +139,16 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
         });
       }
       for (let i = portalCollectibles.length - 1; i >= 0; i--) {
-        portalCollectibles[i].life -= dt;
-        if (portalCollectibles[i].life <= 0) {
+        const c = portalCollectibles[i];
+        const dx = c.x - player.x;
+        const dy = c.y - player.y;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        c.x += (dx / dist) * PORTAL_COLLECTIBLE_DRIFT_SPEED * dt;
+        c.y += (dy / dist) * PORTAL_COLLECTIBLE_DRIFT_SPEED * dt;
+        c.x = Math.max(30, Math.min(width - 30, c.x));
+        c.y = Math.max(30, Math.min(height - 30, c.y));
+        c.life -= dt;
+        if (c.life <= 0) {
           renderer3d.onCollectibleRemoved?.(portalCollectibles[i]);
           portalCollectibles.splice(i, 1);
         }
@@ -194,6 +206,8 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
       portalSpawner.remove(hitPortal, (p) => renderer3d.onPortalRemoved?.(p));
       portalMode = true;
       portalTimer = PORTAL_BONUS_DURATION;
+      portalCenterX = hitPortal.x;
+      portalCenterY = hitPortal.y;
       portalCollectibles = [];
       portalCollectibleSpawnTimer = 0;
     }
