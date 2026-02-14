@@ -26,6 +26,7 @@ const obstacleSpawner = createObstacleSpawner(WIDTH, HEIGHT);
 
 let state = 'MENU';
 let score = 0;
+let allFeaturesMode = false;
 let scoreBreakdown = { survival: 0, clear: 0, rings: 0, bonus500: 0, nearMiss: 0 };
 let highScore = ui.getHighScore();
 let highLevel = ui.getHighLevel();
@@ -39,12 +40,13 @@ function startPlaying() {
   state = 'PLAYING';
   score = 0;
   scoreBreakdown = { survival: 0, clear: 0, rings: 0, bonus500: 0, nearMiss: 0 };
+  allFeaturesMode = document.getElementById('all-features-checkbox')?.checked ?? false;
   resetPlayer(player, WIDTH, HEIGHT);
   highScore = ui.getHighScore();
   highLevel = ui.getHighLevel();
   ui.showPlaying(score, highScore, highLevel, 3);
   ui.updateScoreCard?.(scoreBreakdown);
-  gameInstance = createGame(canvas, WIDTH, HEIGHT, player, obstacleSpawner, onGameOver, addScore, onLevelUp, onLivesUpdate);
+  gameInstance = createGame(canvas, WIDTH, HEIGHT, player, obstacleSpawner, onGameOver, addScore, onLevelUp, onLivesUpdate, { allFeaturesFromStart: allFeaturesMode });
   // BGM starts after countdown (handled in game loop)
 }
 

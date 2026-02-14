@@ -30,9 +30,10 @@ const PORTAL_BONUS_DURATION = 10;
 const PORTAL_COLLECTIBLE_SPAWN_INTERVAL = 0.45;
 const PORTAL_COLLECTIBLE_MAX = 12;
 
-export function createGame(canvas, width, height, player, obstacleSpawner, onGameOver, onScoreUpdate, onLevelUp, onLivesUpdate) {
+export function createGame(canvas, width, height, player, obstacleSpawner, onGameOver, onScoreUpdate, onLevelUp, onLivesUpdate, options = {}) {
   width = width ?? canvas?.width ?? 800;
   height = height ?? canvas?.height ?? 600;
+  const allFeaturesFromStart = options.allFeaturesFromStart ?? false;
 
   renderer3d.init(canvas, width, height);
   renderer3d.reset();
@@ -40,7 +41,7 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
   const collectibleSpawner = createCollectibleSpawner(width, height);
   collectibleSpawner.reset((c) => renderer3d.onCollectibleRemoved?.(c));
   obstacleSpawner.setOnSpawn?.((o) => {
-    if (isFeatureEnabled(FEATURES.COLLECTIBLE_IN_FRONT, level) && Math.random() < 0.08) {
+    if (isFeatureEnabled(FEATURES.COLLECTIBLE_IN_FRONT, level, allFeaturesFromStart) && Math.random() < 0.08) {
       collectibleSpawner.spawnInFrontOfObstacle?.(o);
     }
   });
@@ -89,7 +90,7 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
       if (countdownPhase === 0 && prev === 1) {
         audio.playGo();
         audio.startBGM();
-        if (isFeatureEnabled(FEATURES.COLLECTIBLES, 1)) collectibleSpawner.primeFirstSpawn?.();
+        if (isFeatureEnabled(FEATURES.COLLECTIBLES, 1, allFeaturesFromStart)) collectibleSpawner.primeFirstSpawn?.();
       }
       return { countdownPhase, countdownTimer };
     }
@@ -185,7 +186,7 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
       }
     }
 
-    const bonusPortalEnabled = isFeatureEnabled(FEATURES.BONUS_PORTAL, level);
+    const bonusPortalEnabled = isFeatureEnabled(FEATURES.BONUS_PORTAL, level, allFeaturesFromStart);
     const hitPortal = checkPlayerPortal(player, portalSpawner.portals);
     if (hitPortal && bonusPortalEnabled) {
       audio.playPowerUp?.();
@@ -203,10 +204,10 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
     if (slowmoTimer > 0) slowmoTimer -= dt;
     if (magnetTimer > 0) magnetTimer -= dt;
 
-    const speedLevel = isFeatureEnabled(FEATURES.OBSTACLE_SPEED_RAMP, level) ? level : 1;
-    const countLevel = isFeatureEnabled(FEATURES.OBSTACLE_COUNT_RAMP, level) ? level : 1;
-    const spawnLevel = isFeatureEnabled(FEATURES.OBSTACLE_SPAWN_RAMP, level) ? level : 1;
-    const suddenHardEnabled = isFeatureEnabled(FEATURES.SUDDEN_HARD_OBSTACLES, level);
+    const speedLevel = isFeatureEnabled(FEATURES.OBSTACLE_SPEED_RAMP, level, allFeaturesFromStart) ? level : 1;
+    const countLevel = isFeatureEnabled(FEATURES.OBSTACLE_COUNT_RAMP, level, allFeaturesFromStart) ? level : 1;
+    const spawnLevel = isFeatureEnabled(FEATURES.OBSTACLE_SPAWN_RAMP, level, allFeaturesFromStart) ? level : 1;
+    const suddenHardEnabled = isFeatureEnabled(FEATURES.SUDDEN_HARD_OBSTACLES, level, allFeaturesFromStart);
     obstacleSpawner.update(dt, level, baseSpeedMult, speedLevel, countLevel, spawnLevel, suddenHardEnabled);
 
     // Level progression: level up every LEVEL_DURATION seconds
@@ -215,16 +216,18 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
     if (newLevel > level) {
       level = newLevel;
       levelUpAnimTimer = 1.2;
-      if (isFeatureEnabled(FEATURES.BOSS_WAVE, level) && level % 3 === 0 && portalSpawner.portals.length === 0 && !portalMode) {
+      if (isFeatureEnabled(FEATURES.BOSS_WAVE, level, allFeaturesFromStart) && level % 3 === 0 && portalSpawner.portals.length === 0 && !portalMode) {
         bossWaveTimer = BOSS_WAVE_DURATION;
       }
       audio.playLevelUp?.();
       triggerHaptic('levelUp');
       onLevelUp?.(level);
-      const unlocked = getFeaturesUnlockedAtLevel(level);
-      if (unlocked.length > 0) {
-        const labels = unlocked.map((f) => FEATURE_LABELS[f]).filter(Boolean);
-        setTimeout(() => ui.showFeatureUnlocked?.(labels), 500);
+      if (!allFeaturesFromStart) {
+        const unlocked = getFeaturesUnlockedAtLevel(level);
+        if (unlocked.length > 0) {
+          const labels = unlocked.map((f) => FEATURE_LABELS[f]).filter(Boolean);
+          setTimeout(() => ui.showFeatureUnlocked?.(labels), 500);
+        }
       }
     }
     if (bossWaveTimer > 0) bossWaveTimer -= dt;
@@ -232,10 +235,10 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
     if (invincibilityTimer > 0) invincibilityTimer -= dt;
 
     const magnetTarget = magnetTimer > 0 ? { x: player.x, y: player.y } : null;
-    const collectiblesEnabled = isFeatureEnabled(FEATURES.COLLECTIBLES, level);
-    const collectibleBonusEnabled = isFeatureEnabled(FEATURES.COLLECTIBLE_BONUS, level);
-    const collectibleFloatEnabled = isFeatureEnabled(FEATURES.COLLECTIBLE_FLOAT, level);
-    const powerupsEnabled = isFeatureEnabled(FEATURES.POWERUPS, level);
+    const collectiblesEnabled = isFeatureEnabled(FEATURES.COLLECTIBLES, level, allFeaturesFromStart);
+    const collectibleBonusEnabled = isFeatureEnabled(FEATURES.COLLECTIBLE_BONUS, level, allFeaturesFromStart);
+    const collectibleFloatEnabled = isFeatureEnabled(FEATURES.COLLECTIBLE_FLOAT, level, allFeaturesFromStart);
+    const powerupsEnabled = isFeatureEnabled(FEATURES.POWERUPS, level, allFeaturesFromStart);
     collectibleSpawner.update(dt, (c) => renderer3d.onCollectibleRemoved?.(c), level, magnetTarget, baseSpeedMult, collectiblesEnabled, collectibleBonusEnabled, collectibleFloatEnabled);
     powerupSpawner.update(dt, (p) => renderer3d.onPowerupRemoved?.(p), level, powerupsEnabled);
     particles = updateParticles(particles, dt);
@@ -280,7 +283,7 @@ export function createGame(canvas, width, height, player, obstacleSpawner, onGam
         if (closestObs) nearMissObstacles.add(closestObs);
         nearMissTimestamps.push(nmGameTime);
         if (nearMissTimestamps.length >= NEAR_MISS_COMBO_COUNT) {
-          if (isFeatureEnabled(FEATURES.NEAR_MISS_COMBO, level)) {
+          if (isFeatureEnabled(FEATURES.NEAR_MISS_COMBO, level, allFeaturesFromStart)) {
             onScoreUpdate?.(NEAR_MISS_COMBO_POINTS, 'nearMiss');
             ui.showNearMissBonus?.(NEAR_MISS_COMBO_POINTS);
             triggerHaptic('levelUp');

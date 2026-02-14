@@ -43,7 +43,8 @@ export const FEATURE_UNLOCK_LEVEL = {
   // Level 9
 };
 
-export function isFeatureEnabled(feature, level) {
+export function isFeatureEnabled(feature, level, allFeaturesFromStart = false) {
+  if (allFeaturesFromStart && level >= 1) return true;
   return level >= (FEATURE_UNLOCK_LEVEL[feature] ?? 1);
 }
 
