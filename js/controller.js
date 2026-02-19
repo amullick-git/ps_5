@@ -73,6 +73,7 @@ export function initController() {
   if (canvas) {
     canvas.addEventListener('pointerdown', (e) => {
       if (e.pointerType !== 'touch') return;
+      if (touchActive) return;
       const interactive = e.target?.closest?.('button,input,label,select,textarea,a');
       if (interactive) return;
       touchActive = true;
@@ -111,7 +112,6 @@ export function initController() {
       e?.preventDefault?.();
       e?.stopPropagation?.();
     };
-    pauseBtn.addEventListener('click', onPause);
     pauseBtn.addEventListener('pointerdown', onPause);
   }
 
