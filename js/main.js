@@ -3,6 +3,7 @@
  */
 
 import { initController, getAnyButtonPressed, getPausePressed, clearButtonState } from './controller.js';
+import { initTouchControls, showTouchControls, hideTouchControls, isTouchDevice } from './touch.js';
 import { createPlayer, resetPlayer } from './player.js';
 import { createObstacleSpawner } from './obstacle.js';
 import { createGame } from './game.js';
@@ -46,6 +47,7 @@ function startPlaying() {
   highLevel = ui.getHighLevel();
   ui.showPlaying(score, highScore, highLevel, 3);
   ui.updateScoreCard?.(scoreBreakdown);
+  if (isTouchDevice()) showTouchControls();
   gameInstance = createGame(canvas, WIDTH, HEIGHT, player, obstacleSpawner, onGameOver, addScore, onLevelUp, onLivesUpdate, { allFeaturesFromStart: allFeaturesMode });
   // BGM starts after countdown (handled in game loop)
 }
@@ -67,6 +69,7 @@ function addScore(points, category = '') {
 function onGameOver() {
   state = 'MENU';
   clearButtonState();
+  hideTouchControls();
   audio.stopBGM();
   const level = gameInstance?.getLevel?.() ?? 1;
   if (level > highLevel) {
@@ -154,6 +157,7 @@ function init() {
   requestAnimationFrame(() => resizeCanvas());
   window.addEventListener('resize', () => requestAnimationFrame(resizeCanvas));
   initController();
+  initTouchControls();
   ui.showMenu();
 
   // Unlock audio on any real user gesture (required on Windows / strict browsers).

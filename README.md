@@ -1,6 +1,6 @@
 # Dodge Run
 
-A browser game controlled by the PS5 DualSense controller (or keyboard). Move with the left stick, avoid obstacles, grab collectibles and power-ups, and survive as long as you can. High score and best level are saved.
+A browser game controlled by the PS5 DualSense controller, keyboard, or **touch** (mobile). Move with the left stick, virtual joystick, or WASD, avoid obstacles, grab collectibles and power-ups, and survive as long as you can. High score and best level are saved.
 
 ## Features
 
@@ -18,7 +18,8 @@ Game over returns you to the Dodge Run menu; high score and best level are shown
 ## Requirements
 
 - Modern browser (Chrome, Firefox, Edge, or Safari)
-- PS5 DualSense controller (USB or Bluetooth) — or use keyboard (WASD/arrows)
+- **Desktop:** PS5 DualSense controller (USB or Bluetooth) — or keyboard (WASD/arrows)
+- **Mobile:** Touch screen — virtual joystick and pause button appear automatically
 
 ## Run Locally
 
@@ -86,6 +87,9 @@ The game triggers controller vibration on collect, collision, near-miss, level-u
 | WASD or Arrow keys | Move (keyboard) |
 | Enter / Space | Start / Restart |
 | Escape / P | Pause |
+| **Mobile:** Virtual joystick (bottom-left) | Move |
+| **Mobile:** Pause button (top-right) | Pause / Resume |
+| **Mobile:** Tap screen | Start / Restart |
 
 ## Design
 

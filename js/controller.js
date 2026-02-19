@@ -1,8 +1,10 @@
 /**
- * Controller module — Gamepad polling and keyboard fallback.
+ * Controller module — Gamepad polling, keyboard fallback, and touch controls.
  * DualSense: axes 0,1 = left stick; button 9 = Options (pause).
  * Dead zone: 0.15.
  */
+import { getTouchMovement, wasPauseTapped, consumePauseTap, isTouchDevice } from './touch.js';
+
 const DEAD_ZONE = 0.15;
 
 const GAME_KEYS = new Set([
@@ -71,6 +73,14 @@ export function getMovement() {
     return { x, y };
   }
 
+  // Touch (mobile) fallback — virtual joystick
+  if (isTouchDevice()) {
+    const touch = getTouchMovement();
+    if (touch.x !== 0 || touch.y !== 0) {
+      return touch;
+    }
+  }
+
   return { x: 0, y: 0 };
 }
 
@@ -96,6 +106,7 @@ export function getAnyButtonPressed() {
 /**
  * Returns true if Options (pause) was pressed.
  * DualSense: button 9 = Options, button 10 = Touchpad (some use for pause).
+ * On mobile: on-screen pause button tap.
  */
 export function getPausePressed() {
   const gp = navigator.getGamepads?.();
@@ -104,7 +115,12 @@ export function getPausePressed() {
     if (pad.buttons[9]?.pressed) return true;  // Options (DualSense)
     if (pad.buttons[10]?.pressed) return true; // Touchpad / Start (fallback)
   }
-  return keys['Escape'] || keys['KeyP'];
+  if (keys['Escape'] || keys['KeyP']) return true;
+  if (wasPauseTapped()) {
+    consumePauseTap();
+    return true;
+  }
+  return false;
 }
 
 /**

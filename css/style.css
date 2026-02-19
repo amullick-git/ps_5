@@ -555,3 +555,112 @@ body {
 .hidden {
   display: none !important;
 }
+
+/* ----- Touch / Mobile controls ----- */
+.touch-joystick-base {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 1.5rem;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.5);
+  border: 2px solid rgba(0, 217, 255, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  z-index: 20;
+}
+
+.touch-joystick-stick {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(0, 217, 255, 0.6);
+  border: 2px solid rgba(0, 217, 255, 0.9);
+  pointer-events: none;
+  transition: transform 0.05s ease-out;
+}
+
+.touch-pause-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 2px solid rgba(0, 217, 255, 0.5);
+  color: #00D9FF;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 20;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.touch-pause-btn:hover,
+.touch-pause-btn:active {
+  background: rgba(0, 217, 255, 0.2);
+}
+
+/* Mobile: prevent overscroll and improve touch */
+@media (max-width: 768px) {
+  html, body {
+    overflow-x: hidden;
+    touch-action: manipulation;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  #game-container {
+    max-width: 100vw;
+  }
+
+  #game-canvas {
+    max-height: 80vh;
+  }
+
+  #menu-screen h1 {
+    font-size: 2.5rem;
+  }
+
+  #menu-screen .menu-tagline {
+    font-size: 0.85rem;
+    letter-spacing: 0.15em;
+  }
+
+  #menu-screen p,
+  #game-over-screen p {
+    font-size: 1rem;
+  }
+
+  #powerup-legend {
+    font-size: 0.8rem;
+    gap: 0.35rem 0.75rem;
+  }
+
+  .controller-hint {
+    display: none;
+  }
+
+  .desktop-controls {
+    display: none;
+  }
+
+  .mobile-hint {
+    display: block !important;
+  }
+}
+
+/* Desktop: hide mobile-specific hint, show desktop controls */
+.mobile-hint {
+  display: none;
+}
