@@ -112,6 +112,7 @@ export function showMenu(lastScore, lastLevel, lastBreakdown) {
   document.getElementById('portal-timer-overlay')?.classList.add('hidden');
   document.getElementById('points-popup')?.classList.add('hidden');
   document.getElementById('near-miss-bonus')?.classList.add('hidden');
+  setMobileControlsVisible(false);
   const bestEl = document.getElementById('menu-best');
   if (bestEl) bestEl.textContent = `Best: ${getHighScore()} — Best level: ${getHighLevel()}`;
 
@@ -144,6 +145,7 @@ export function showPlaying(score, highScore, highLevel = 1, lives = 3) {
   document.getElementById('game-over-screen').classList.add('hidden');
   document.getElementById('paused-overlay').classList.add('hidden');
   document.getElementById('hud').classList.remove('hidden');
+  setMobileControlsVisible(true);
   updateScore(score);
   updateHighScore(highScore);
   updateHighLevel(highLevel);
@@ -161,6 +163,7 @@ export function showGameOver(score, highScore, highLevel = 1) {
   document.getElementById('points-popup')?.classList.add('hidden');
   document.getElementById('near-miss-bonus')?.classList.add('hidden');
   document.getElementById('game-over-screen').classList.remove('hidden');
+  setMobileControlsVisible(false);
   document.getElementById('final-score').textContent = `Score: ${score}`;
   document.getElementById('final-high-score').textContent = `Best: ${highScore}`;
   const levelEl = document.getElementById('final-high-level');
@@ -238,4 +241,21 @@ export function showSoundHint() {
 export function hideSoundHint() {
   const el = document.getElementById('sound-hint');
   if (el) el.classList.add('hidden');
+}
+
+let _mobileControlsEnabled = false;
+
+export function enableMobileControls() {
+  _mobileControlsEnabled = true;
+}
+
+function setMobileControlsVisible(visible) {
+  if (!_mobileControlsEnabled) return;
+  const el = document.getElementById('mobile-controls');
+  if (!el) return;
+  if (visible) {
+    el.classList.remove('hidden');
+  } else {
+    el.classList.add('hidden');
+  }
 }

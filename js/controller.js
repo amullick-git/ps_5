@@ -1,5 +1,5 @@
 /**
- * Controller module — Gamepad polling and keyboard fallback.
+ * Controller module — Gamepad polling, keyboard fallback, and touch joystick.
  * DualSense: axes 0,1 = left stick; button 9 = Options (pause).
  * Dead zone: 0.15.
  */
@@ -12,6 +12,12 @@ const GAME_KEYS = new Set([
 ]);
 
 let keys = {};
+
+let touchJoystick = { x: 0, y: 0, active: false };
+let _joystickTouchId = null;
+let _joystickBase = null;
+let _joystickKnob = null;
+const JOYSTICK_RADIUS = 50;
 
 export function initController() {
   window.addEventListener('gamepadconnected', () => {});
@@ -28,11 +34,92 @@ export function initController() {
   });
 }
 
+export function initTouchJoystick(baseEl, knobEl) {
+  _joystickBase = baseEl;
+  _joystickKnob = knobEl;
+  if (!baseEl) return;
+
+  baseEl.addEventListener('touchstart', onJoystickTouchStart, { passive: false });
+  document.addEventListener('touchmove', onJoystickTouchMove, { passive: false });
+  document.addEventListener('touchend', onJoystickTouchEnd, { passive: false });
+  document.addEventListener('touchcancel', onJoystickTouchEnd, { passive: false });
+}
+
+function onJoystickTouchStart(e) {
+  if (_joystickTouchId !== null) return;
+  e.preventDefault();
+  const touch = e.changedTouches[0];
+  _joystickTouchId = touch.identifier;
+  updateJoystickFromTouch(touch);
+}
+
+function onJoystickTouchMove(e) {
+  if (_joystickTouchId === null) return;
+  for (const touch of e.changedTouches) {
+    if (touch.identifier === _joystickTouchId) {
+      e.preventDefault();
+      updateJoystickFromTouch(touch);
+      return;
+    }
+  }
+}
+
+function onJoystickTouchEnd(e) {
+  for (const touch of e.changedTouches) {
+    if (touch.identifier === _joystickTouchId) {
+      _joystickTouchId = null;
+      touchJoystick.x = 0;
+      touchJoystick.y = 0;
+      touchJoystick.active = false;
+      if (_joystickKnob) {
+        _joystickKnob.style.transform = 'translate(-50%, -50%)';
+      }
+      return;
+    }
+  }
+}
+
+function updateJoystickFromTouch(touch) {
+  if (!_joystickBase) return;
+  const rect = _joystickBase.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+  let dx = touch.clientX - centerX;
+  let dy = touch.clientY - centerY;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+
+  if (dist > JOYSTICK_RADIUS) {
+    dx = (dx / dist) * JOYSTICK_RADIUS;
+    dy = (dy / dist) * JOYSTICK_RADIUS;
+  }
+
+  touchJoystick.x = dx / JOYSTICK_RADIUS;
+  touchJoystick.y = dy / JOYSTICK_RADIUS;
+  touchJoystick.active = true;
+
+  if (_joystickKnob) {
+    _joystickKnob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+  }
+}
+
 /**
  * Returns normalized movement vector { x, y } from -1 to 1.
  * Magnitude capped at 1.
  */
 export function getMovement() {
+  // Touch joystick takes priority on mobile
+  if (touchJoystick.active) {
+    let x = touchJoystick.x;
+    let y = touchJoystick.y;
+    if (Math.abs(x) < DEAD_ZONE) x = 0;
+    if (Math.abs(y) < DEAD_ZONE) y = 0;
+    if (x !== 0 || y !== 0) {
+      const mag = Math.sqrt(x * x + y * y);
+      if (mag > 1) { x /= mag; y /= mag; }
+      return { x, y };
+    }
+  }
+
   const gp = navigator.getGamepads?.();
   const pad = gp?.[0];
 
@@ -40,12 +127,10 @@ export function getMovement() {
     let x = pad.axes[0] ?? 0;
     let y = pad.axes[1] ?? 0;
 
-    // Dead zone
     if (Math.abs(x) < DEAD_ZONE) x = 0;
     if (Math.abs(y) < DEAD_ZONE) y = 0;
 
     if (x !== 0 || y !== 0) {
-      // Normalize and cap magnitude
       const mag = Math.sqrt(x * x + y * y);
       if (mag > 1) {
         x /= mag;
@@ -72,6 +157,10 @@ export function getMovement() {
   }
 
   return { x: 0, y: 0 };
+}
+
+export function isTouchDevice() {
+  return ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 }
 
 /**

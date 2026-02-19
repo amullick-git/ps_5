@@ -2,7 +2,7 @@
  * Main entry — init, state machine, game loop.
  */
 
-import { initController, getAnyButtonPressed, getPausePressed, clearButtonState } from './controller.js';
+import { initController, initTouchJoystick, getAnyButtonPressed, getPausePressed, clearButtonState, isTouchDevice } from './controller.js';
 import { createPlayer, resetPlayer } from './player.js';
 import { createObstacleSpawner } from './obstacle.js';
 import { createGame } from './game.js';
@@ -103,7 +103,8 @@ function loop(timestamp) {
   }
 
   const anyBtn = getAnyButtonPressed();
-  const pauseBtn = getPausePressed();
+  const pauseBtn = getPausePressed() || mobilePausePressed;
+  mobilePausePressed = false;
 
   if (state === 'MENU') {
     if (anyBtn || startGameOnNextFrame) {
@@ -149,15 +150,52 @@ function loop(timestamp) {
 
 let lastTime = 0;
 
+let mobilePausePressed = false;
+
 function init() {
   renderer3d.init(canvas, WIDTH, HEIGHT);
   requestAnimationFrame(() => resizeCanvas());
   window.addEventListener('resize', () => requestAnimationFrame(resizeCanvas));
+  window.addEventListener('orientationchange', () => {
+    setTimeout(() => requestAnimationFrame(resizeCanvas), 200);
+  });
   initController();
   ui.showMenu();
 
-  // Unlock audio on any real user gesture (required on Windows / strict browsers).
-  // Gamepad alone does NOT count as a user gesture, so audio stays muted.
+  const isTouch = isTouchDevice();
+  const mobileControls = document.getElementById('mobile-controls');
+  const pauseBtn = document.getElementById('mobile-pause-btn');
+
+  if (isTouch && mobileControls) {
+    ui.enableMobileControls();
+    const joystickBase = document.getElementById('joystick-base');
+    const joystickKnob = document.getElementById('joystick-knob');
+    initTouchJoystick(joystickBase, joystickKnob);
+  }
+
+  if (pauseBtn) {
+    pauseBtn.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      mobilePausePressed = true;
+    }, { passive: false });
+    pauseBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      mobilePausePressed = true;
+    });
+  }
+
+  // Prevent pinch-zoom and double-tap zoom on the game area
+  const container = document.getElementById('game-container');
+  if (container) {
+    container.addEventListener('touchmove', (e) => {
+      if (e.touches.length > 1) e.preventDefault();
+    }, { passive: false });
+  }
+  document.addEventListener('gesturestart', (e) => e.preventDefault());
+
+  // Unlock audio on any real user gesture
   const unlockAudio = () => {
     audio.initAudio();
     audio.resumeAudio();
@@ -184,10 +222,8 @@ function init() {
   document.addEventListener('keydown', activate);
   document.addEventListener('touchstart', activate, { passive: true });
 
-  const container = document.getElementById('game-container');
   if (container) container.addEventListener('click', activate);
 
-  // From menu (including after game over): click or key starts the game
   function requestStartFromMenu() {
     if (state === 'MENU') startGameOnNextFrame = true;
   }

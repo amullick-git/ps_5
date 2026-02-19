@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dodge Run — PS5 Controller Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Dodge Run</title>
   <link rel="stylesheet" href="css/style.css">
   <script type="importmap">
   {
@@ -32,7 +32,7 @@
             <span id="msc-nearMiss" class="sc-item pts-500"><span class="sc-icon">⚡</span><span class="sc-val">0</span></span>
           </div>
         </div>
-        <p>Use the left stick to move. Avoid obstacles (boxes), grab collectibles (rings) and power-ups (stars)!</p>
+        <p id="menu-instructions">Avoid obstacles, grab collectibles and power-ups!</p>
         <div id="powerup-legend">
           <span class="pu-shield" title="Invincibility 5s">🛡 White = Shield</span>
           <span class="pu-slowmo" title="Obstacles half speed 8s">⏱ Purple = Slow-mo</span>
@@ -44,8 +44,8 @@
           <input type="checkbox" id="all-features-checkbox" />
           <span>All features from level 1</span>
         </label>
-        <p class="hint">Click or press any key to start (enables sound)</p>
-        <p class="controller-hint">Connect your PS5 controller for the best experience</p>
+        <p class="hint" id="menu-start-hint">Tap or press any key to start</p>
+        <p class="controller-hint" id="menu-controller-hint">Connect a controller or use keyboard / touch</p>
       </div>
       <div id="hud" class="hidden">
         <div id="score-section">
@@ -65,7 +65,7 @@
           <span id="high-score-display">Best: 0</span>
           <span id="high-level-display">Best Lvl: 1</span>
         </div>
-        <div id="pause-hint">Options, Esc or P to pause</div>
+        <div id="pause-hint">Esc or P to pause</div>
         <div id="powerup-hud-legend">
           <span class="pu-shield" title="Invincibility 5s">🛡 Shield</span>
           <span class="pu-slowmo" title="Obstacles half speed">⏱ Slow</span>
@@ -79,11 +79,11 @@
         <p id="final-score">Score: 0</p>
         <p id="final-high-score">Best: 0</p>
         <p id="final-high-level">Best level: 1</p>
-        <p class="hint">Press any button or key to restart</p>
+        <p class="hint" id="gameover-restart-hint">Tap or press any key to restart</p>
       </div>
       <div id="paused-overlay" class="hidden">
         <h2>Paused</h2>
-        <p class="hint">Press Options, Esc or P to resume</p>
+        <p class="hint" id="paused-resume-hint">Tap pause or press Esc to resume</p>
       </div>
       <div id="countdown-overlay" class="hidden">
         <span id="countdown-text">3</span>
@@ -102,7 +102,15 @@
       <div id="near-miss-bonus" class="hidden">
         <span id="near-miss-bonus-text">3 Near Misses! +500</span>
       </div>
-      <div id="sound-hint" class="hidden">Click anywhere to enable sound</div>
+      <div id="sound-hint" class="hidden">Tap anywhere to enable sound</div>
+    </div>
+    <div id="mobile-controls" class="hidden">
+      <div id="joystick-zone">
+        <div id="joystick-base">
+          <div id="joystick-knob"></div>
+        </div>
+      </div>
+      <button id="mobile-pause-btn" type="button" aria-label="Pause">⏸</button>
     </div>
   </div>
   <script type="module" src="js/main.js"></script>
