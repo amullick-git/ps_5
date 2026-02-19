@@ -6,6 +6,16 @@
 const HIGH_SCORE_KEY = 'dodgeRunHighScore';
 const HIGH_LEVEL_KEY = 'dodgeRunHighLevel';
 
+function setMobileControlsVisible(visible) {
+  const el = document.getElementById('mobile-controls');
+  if (!el) return;
+  if (!document.body.classList.contains('touch-device')) {
+    el.classList.add('hidden');
+    return;
+  }
+  el.classList.toggle('hidden', !visible);
+}
+
 export function getHighScore() {
   return parseInt(localStorage.getItem(HIGH_SCORE_KEY) || '0', 10);
 }
@@ -112,6 +122,7 @@ export function showMenu(lastScore, lastLevel, lastBreakdown) {
   document.getElementById('portal-timer-overlay')?.classList.add('hidden');
   document.getElementById('points-popup')?.classList.add('hidden');
   document.getElementById('near-miss-bonus')?.classList.add('hidden');
+  setMobileControlsVisible(false);
   const bestEl = document.getElementById('menu-best');
   if (bestEl) bestEl.textContent = `Best: ${getHighScore()} — Best level: ${getHighLevel()}`;
 
@@ -144,6 +155,7 @@ export function showPlaying(score, highScore, highLevel = 1, lives = 3) {
   document.getElementById('game-over-screen').classList.add('hidden');
   document.getElementById('paused-overlay').classList.add('hidden');
   document.getElementById('hud').classList.remove('hidden');
+  setMobileControlsVisible(true);
   updateScore(score);
   updateHighScore(highScore);
   updateHighLevel(highLevel);
@@ -160,6 +172,7 @@ export function showGameOver(score, highScore, highLevel = 1) {
   document.getElementById('portal-timer-overlay')?.classList.add('hidden');
   document.getElementById('points-popup')?.classList.add('hidden');
   document.getElementById('near-miss-bonus')?.classList.add('hidden');
+  setMobileControlsVisible(false);
   document.getElementById('game-over-screen').classList.remove('hidden');
   document.getElementById('final-score').textContent = `Score: ${score}`;
   document.getElementById('final-high-score').textContent = `Best: ${highScore}`;

@@ -4,6 +4,7 @@
  * Dead zone: 0.15.
  */
 const DEAD_ZONE = 0.15;
+const TOUCH_JOYSTICK_DEAD_ZONE = 0.08;
 
 const GAME_KEYS = new Set([
   'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
@@ -12,6 +13,103 @@ const GAME_KEYS = new Set([
 ]);
 
 let keys = {};
+let touchMovement = { x: 0, y: 0 };
+let touchPausePressed = false;
+let touchJoystickEl = null;
+let touchJoystickKnobEl = null;
+let touchJoystickPointerId = null;
+
+function normalizeMovement(x, y, deadZone = DEAD_ZONE) {
+  if (Math.abs(x) < deadZone) x = 0;
+  if (Math.abs(y) < deadZone) y = 0;
+  if (x === 0 && y === 0) return { x: 0, y: 0 };
+  const mag = Math.hypot(x, y);
+  if (mag > 1) return { x: x / mag, y: y / mag };
+  return { x, y };
+}
+
+function isTouchDevice() {
+  if (navigator.maxTouchPoints > 0) return true;
+  if ('ontouchstart' in window) return true;
+  return window.matchMedia?.('(pointer: coarse)').matches ?? false;
+}
+
+function resetTouchJoystick() {
+  touchMovement = { x: 0, y: 0 };
+  touchJoystickPointerId = null;
+  if (touchJoystickKnobEl) {
+    touchJoystickKnobEl.style.transform = 'translate(0px, 0px)';
+  }
+}
+
+function setupTouchControls() {
+  if (!isTouchDevice()) return;
+
+  document.body.classList.add('touch-device');
+
+  touchJoystickEl = document.getElementById('mobile-joystick');
+  touchJoystickKnobEl = document.getElementById('mobile-joystick-knob');
+  const pauseBtn = document.getElementById('mobile-pause-btn');
+  if (!touchJoystickEl || !touchJoystickKnobEl || !pauseBtn) return;
+
+  const updateTouchMovement = (clientX, clientY) => {
+    const rect = touchJoystickEl.getBoundingClientRect();
+    const knobRadius = touchJoystickKnobEl.offsetWidth / 2 || 0;
+    const maxDistance = Math.max(rect.width / 2 - knobRadius, 1);
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    let dx = clientX - cx;
+    let dy = clientY - cy;
+    const dist = Math.hypot(dx, dy);
+    if (dist > maxDistance) {
+      const k = maxDistance / dist;
+      dx *= k;
+      dy *= k;
+    }
+    touchJoystickKnobEl.style.transform = `translate(${dx}px, ${dy}px)`;
+    touchMovement = normalizeMovement(
+      dx / maxDistance,
+      dy / maxDistance,
+      TOUCH_JOYSTICK_DEAD_ZONE
+    );
+  };
+
+  touchJoystickEl.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse') return;
+    touchJoystickPointerId = e.pointerId;
+    touchJoystickEl.setPointerCapture?.(e.pointerId);
+    updateTouchMovement(e.clientX, e.clientY);
+    e.preventDefault();
+  });
+
+  touchJoystickEl.addEventListener('pointermove', (e) => {
+    if (e.pointerId !== touchJoystickPointerId) return;
+    updateTouchMovement(e.clientX, e.clientY);
+    e.preventDefault();
+  });
+
+  const endJoystick = (e) => {
+    if (touchJoystickPointerId == null || e.pointerId === touchJoystickPointerId) {
+      resetTouchJoystick();
+      e.preventDefault();
+    }
+  };
+  touchJoystickEl.addEventListener('pointerup', endJoystick);
+  touchJoystickEl.addEventListener('pointercancel', endJoystick);
+
+  pauseBtn.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse') return;
+    touchPausePressed = true;
+    e.preventDefault();
+  });
+  pauseBtn.addEventListener('click', (e) => e.preventDefault());
+
+  window.addEventListener('blur', () => {
+    keys = {};
+    touchPausePressed = false;
+    resetTouchJoystick();
+  });
+}
 
 export function initController() {
   window.addEventListener('gamepadconnected', () => {});
@@ -26,6 +124,8 @@ export function initController() {
   window.addEventListener('keyup', (e) => {
     keys[e.code] = false;
   });
+
+  setupTouchControls();
 }
 
 /**
@@ -37,22 +137,8 @@ export function getMovement() {
   const pad = gp?.[0];
 
   if (pad) {
-    let x = pad.axes[0] ?? 0;
-    let y = pad.axes[1] ?? 0;
-
-    // Dead zone
-    if (Math.abs(x) < DEAD_ZONE) x = 0;
-    if (Math.abs(y) < DEAD_ZONE) y = 0;
-
-    if (x !== 0 || y !== 0) {
-      // Normalize and cap magnitude
-      const mag = Math.sqrt(x * x + y * y);
-      if (mag > 1) {
-        x /= mag;
-        y /= mag;
-      }
-      return { x, y };
-    }
+    const movement = normalizeMovement(pad.axes[0] ?? 0, pad.axes[1] ?? 0, DEAD_ZONE);
+    if (movement.x !== 0 || movement.y !== 0) return movement;
   }
 
   // Keyboard fallback
@@ -62,14 +148,10 @@ export function getMovement() {
   if (keys['KeyW'] || keys['ArrowUp']) y -= 1;
   if (keys['KeyS'] || keys['ArrowDown']) y += 1;
 
-  if (x !== 0 || y !== 0) {
-    const mag = Math.sqrt(x * x + y * y);
-    if (mag > 1) {
-      x /= mag;
-      y /= mag;
-    }
-    return { x, y };
-  }
+  const keyboardMovement = normalizeMovement(x, y, 0);
+  if (keyboardMovement.x !== 0 || keyboardMovement.y !== 0) return keyboardMovement;
+
+  if (touchMovement.x !== 0 || touchMovement.y !== 0) return touchMovement;
 
   return { x: 0, y: 0 };
 }
@@ -98,6 +180,11 @@ export function getAnyButtonPressed() {
  * DualSense: button 9 = Options, button 10 = Touchpad (some use for pause).
  */
 export function getPausePressed() {
+  if (touchPausePressed) {
+    touchPausePressed = false; // one-shot touch button
+    return true;
+  }
+
   const gp = navigator.getGamepads?.();
   const pad = gp?.[0];
   if (pad) {
@@ -112,6 +199,8 @@ export function getPausePressed() {
  */
 export function clearButtonState() {
   keys = {};
+  touchPausePressed = false;
+  resetTouchJoystick();
 }
 
 /**
