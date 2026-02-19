@@ -44,7 +44,8 @@
           <input type="checkbox" id="all-features-checkbox" />
           <span>All features from level 1</span>
         </label>
-        <p class="hint">Click or press any key to start (enables sound)</p>
+        <p class="hint">Tap/click or press any key to start (enables sound)</p>
+        <p class="touch-only touch-move-hint">Touch and drag on the game to move</p>
         <p class="controller-hint">Connect your PS5 controller for the best experience</p>
       </div>
       <div id="hud" class="hidden">
@@ -65,7 +66,11 @@
           <span id="high-score-display">Best: 0</span>
           <span id="high-level-display">Best Lvl: 1</span>
         </div>
-        <div id="pause-hint">Options, Esc or P to pause</div>
+        <button id="touch-pause" class="touch-only" type="button" aria-label="Pause or resume">⏸</button>
+        <div id="pause-hint">
+          <span class="no-touch">Options, Esc or P to pause</span>
+          <span class="touch-only">Tap ⏸ to pause</span>
+        </div>
         <div id="powerup-hud-legend">
           <span class="pu-shield" title="Invincibility 5s">🛡 Shield</span>
           <span class="pu-slowmo" title="Obstacles half speed">⏱ Slow</span>
@@ -103,6 +108,9 @@
         <span id="near-miss-bonus-text">3 Near Misses! +500</span>
       </div>
       <div id="sound-hint" class="hidden">Click anywhere to enable sound</div>
+      <div id="touch-joystick" class="hidden touch-only" aria-hidden="true">
+        <div id="touch-joystick-knob"></div>
+      </div>
     </div>
   </div>
   <script type="module" src="js/main.js"></script>

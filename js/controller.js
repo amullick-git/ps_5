@@ -1,9 +1,11 @@
 /**
- * Controller module — Gamepad polling and keyboard fallback.
+ * Controller module — Gamepad polling, touch (virtual stick), and keyboard fallback.
  * DualSense: axes 0,1 = left stick; button 9 = Options (pause).
  * Dead zone: 0.15.
  */
 const DEAD_ZONE = 0.15;
+const TOUCH_STICK_RADIUS_PX = 60;
+const TOUCH_DEAD_ZONE = 0.08;
 
 const GAME_KEYS = new Set([
   'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
@@ -12,10 +14,106 @@ const GAME_KEYS = new Set([
 ]);
 
 let keys = {};
+let touchActive = false;
+let touchPointerId = null;
+let touchOrigin = { x: 0, y: 0 };
+let touchCurrent = { x: 0, y: 0 };
+let touchVec = { x: 0, y: 0 };
+let touchPausePressed = false;
+
+function clamp01(v) {
+  return Math.max(-1, Math.min(1, v));
+}
+
+function setTouchVectorFromDelta(dx, dy) {
+  let x = clamp01(dx / TOUCH_STICK_RADIUS_PX);
+  let y = clamp01(dy / TOUCH_STICK_RADIUS_PX);
+  const mag = Math.sqrt(x * x + y * y);
+  if (mag < TOUCH_DEAD_ZONE) {
+    touchVec = { x: 0, y: 0 };
+    return;
+  }
+  if (mag > 1) {
+    x /= mag;
+    y /= mag;
+  }
+  touchVec = { x, y };
+}
+
+function updateJoystickUI() {
+  const joy = document.getElementById('touch-joystick');
+  const knob = document.getElementById('touch-joystick-knob');
+  const container = document.getElementById('game-container');
+  if (!joy || !knob || !container) return;
+  if (!touchActive) {
+    joy.classList.add('hidden');
+    return;
+  }
+  const rect = container.getBoundingClientRect();
+  const ox = touchOrigin.x - rect.left;
+  const oy = touchOrigin.y - rect.top;
+  const cx = touchCurrent.x - rect.left;
+  const cy = touchCurrent.y - rect.top;
+  joy.classList.remove('hidden');
+  joy.style.left = `${ox}px`;
+  joy.style.top = `${oy}px`;
+  const dx = cx - ox;
+  const dy = cy - oy;
+  const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+  const max = TOUCH_STICK_RADIUS_PX;
+  const scale = dist > max ? max / dist : 1;
+  knob.style.transform = `translate(${dx * scale}px, ${dy * scale}px)`;
+}
 
 export function initController() {
   window.addEventListener('gamepadconnected', () => {});
   window.addEventListener('gamepaddisconnected', () => {});
+
+  const canvas = document.getElementById('game-canvas');
+  if (canvas) {
+    canvas.addEventListener('pointerdown', (e) => {
+      if (e.pointerType !== 'touch') return;
+      const interactive = e.target?.closest?.('button,input,label,select,textarea,a');
+      if (interactive) return;
+      touchActive = true;
+      touchPointerId = e.pointerId;
+      touchOrigin = { x: e.clientX, y: e.clientY };
+      touchCurrent = { x: e.clientX, y: e.clientY };
+      touchVec = { x: 0, y: 0 };
+      updateJoystickUI();
+      try { e.preventDefault(); } catch {}
+    }, { passive: false });
+
+    window.addEventListener('pointermove', (e) => {
+      if (!touchActive || e.pointerId !== touchPointerId) return;
+      touchCurrent = { x: e.clientX, y: e.clientY };
+      setTouchVectorFromDelta(touchCurrent.x - touchOrigin.x, touchCurrent.y - touchOrigin.y);
+      updateJoystickUI();
+      try { e.preventDefault(); } catch {}
+    }, { passive: false });
+
+    const endTouch = (e) => {
+      if (!touchActive || e.pointerId !== touchPointerId) return;
+      touchActive = false;
+      touchPointerId = null;
+      touchVec = { x: 0, y: 0 };
+      updateJoystickUI();
+      try { e.preventDefault(); } catch {}
+    };
+    window.addEventListener('pointerup', endTouch, { passive: false });
+    window.addEventListener('pointercancel', endTouch, { passive: false });
+  }
+
+  const pauseBtn = document.getElementById('touch-pause');
+  if (pauseBtn) {
+    const onPause = (e) => {
+      touchPausePressed = true;
+      e?.preventDefault?.();
+      e?.stopPropagation?.();
+    };
+    pauseBtn.addEventListener('click', onPause);
+    pauseBtn.addEventListener('pointerdown', onPause);
+  }
 
   window.addEventListener('keydown', (e) => {
     if (GAME_KEYS.has(e.code)) {
@@ -53,6 +151,10 @@ export function getMovement() {
       }
       return { x, y };
     }
+  }
+
+  if (touchVec.x !== 0 || touchVec.y !== 0) {
+    return touchVec;
   }
 
   // Keyboard fallback
@@ -104,6 +206,10 @@ export function getPausePressed() {
     if (pad.buttons[9]?.pressed) return true;  // Options (DualSense)
     if (pad.buttons[10]?.pressed) return true; // Touchpad / Start (fallback)
   }
+  if (touchPausePressed) {
+    touchPausePressed = false;
+    return true;
+  }
   return keys['Escape'] || keys['KeyP'];
 }
 
@@ -112,6 +218,11 @@ export function getPausePressed() {
  */
 export function clearButtonState() {
   keys = {};
+  touchActive = false;
+  touchPointerId = null;
+  touchVec = { x: 0, y: 0 };
+  touchPausePressed = false;
+  updateJoystickUI();
 }
 
 /**
